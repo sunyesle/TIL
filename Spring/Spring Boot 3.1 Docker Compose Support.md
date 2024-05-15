@@ -102,6 +102,12 @@ spring.docker.compose.stop.command=stop
 
 ---
 
+### 예제 프로젝트
+
+https://github.com/sunyesle/examples/tree/main/spring-boot-docker-compose
+
+---
+
 ### Reference
 
 https://spring.io/blog/2023/06/21/docker-compose-support-in-spring-boot-3-1
