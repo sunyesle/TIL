@@ -24,11 +24,11 @@ dependencies {
 
 ``implemetation``로 선언된 의존성은 **소비자에게 노출되지 않는다.** 소비자의 runtimeClasspath에만 추가되고 compileClasspath에는 포함되지 않는다.
 
-> api는 의존성을 소비자의 컴파일 타임 종속성에 노출하고, implementation은 노출하지 않는다.
+즉, ``api``는 의존성을 소비자의 컴파일 타임 종속성에 노출하고 ``implementation``은 노출하지 않는다.
 
 ### 예시
 
-Project X가 있고, 이는 라이브러리 A와 B에 의존한다. 
+Project X가 있고, 이는 Project A와 Project B에 의존한다. 
 > Project X의 build.gradle
 ```
 dependencies {
@@ -48,9 +48,7 @@ dependencies {
 - compileClasspath: X, A
 - runtimeClasspath: X, A, B
 
-Project X에서 
-
-api를 통해 의존한 A는 compileClasspath에 추가되었다. (의존성 전이)
+Project X에서 api를 통해 의존한 A는 compileClasspath에 추가되었다. (의존성 전이)
 
 반면, implemetation을 통해 의존한 B는 compileClasspath에 추가되지 않았기 때문에 Project C의 코드에서 접근하려고 하면 컴파일 에러가 발생한다.
 
