@@ -2,6 +2,7 @@
 Spring Security는 인증(Authentication), 인가(Authorization) 및 보호 기능을 제공하는 프레임워크이다.
 
 ## 동작 과정
+![blogpost-spring-security-architecture](https://github.com/sunyesle/TIL/assets/45172865/f5980ae6-813a-4155-a5fa-d231e6921b70)
 1. Http Request 수신
 2. 사용자 자격 증명을 기반으로 AuthenticationToken을 생성한다.
 3. 생성된 AuthenticationToken을 AuthenticationManager에게 전달한다.
