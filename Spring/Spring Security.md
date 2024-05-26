@@ -106,8 +106,13 @@ public interface UserDetails extends Serializable {
 ---
 ### Reference
 https://chathurangat.wordpress.com/2017/08/23/spring-security-authentication-architecture/
+
 https://mangkyu.tistory.com/76
+
 https://mysterlee.tistory.com/98
+
 https://docs.spring.io/spring-security/reference/servlet/architecture.html
+
 https://velog.io/@masondev108/Spring-Security-%EA%B8%B0%EB%B3%B8-API%EC%99%80-Filter
+
 https://velog.io/@blessing333/Spring-Security1
