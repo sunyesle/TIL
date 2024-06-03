@@ -21,7 +21,7 @@ SecurityFilterChain app(HttpSecurity http) {
 
 ### Spring Security 5.7 이후
 
-Spring Security 5.7 이후 버전에서 WebSecurity.ignoring()을 사용할 경우 경고메시지가 뜬다.
+Spring Security 5.7 이후 버전에서 ``WebSecurity.ignoring()``을 사용할 경우 경고메시지가 뜬다.
 
 ``You are asking Spring Security to ignore Ant [pattern='...']. This is not recommended -- please use permitAll via HttpSecurity#authorizeHttpRequests instead.``
 
@@ -30,12 +30,12 @@ Spring Security 5.7 이후 버전에서 WebSecurity.ignoring()을 사용할 경�
 [공식문서](https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html#favor-permitall)
 
 Spring Security 5.7부터 SecurityContext 조회 지연 기능을 지원한다.
-과거에는 모든 요청에 대해 SecurityContext 조회 작업이 발생하여 불필요한 오버헤드가 있었고, 이를 해결하기 위해 SecurityFilterChain에서 제외시키는 ignoring()을 사용했다.
-이제 Spring Security는 인증이 필요한 시점까지 SecurityContext 조회를 지연하며, permitAll() 설정을 한 경우 인증이 수행되지 않기 때문에 SecurityContext 조회 작업도 발생하지 않는다.
+과거에는 모든 요청에 대해 SecurityContext 조회 작업이 발생하여 불필요한 오버헤드가 있었고, 이를 해결하기 위해 SecurityFilterChain에서 제외시키는 ``ignoring()``을 사용했다.
+이제 Spring Security는 인증이 필요한 시점까지 SecurityContext 조회를 지연하며, ``permitAll()`` 설정을 한 경우 인증이 수행되지 않기 때문에 SecurityContext 조회 작업도 발생하지 않는다.
 
-또한, ignoring()를 사용하면 Spring Security가 해당 엔드포인트에 보안 헤더나 기타 보호 조치를 제공할 수 없다.
+또한, ``ignoring()``을 사용하면 Spring Security가 해당 엔드포인트에 보안 헤더나 기타 보호 조치를 제공할 수 없다.
 
-따라서 ignoring()보다 permitAll()을 사용하는 것이 권장된다.
+따라서 ``ignoring()``보다 ``permitAll()``을 사용하는 것이 권장된다.
 
 다음과 같이 정적 리소스를 위한 별도의 필터체인을 추가한다.
 ```java
@@ -71,7 +71,7 @@ public SecurityFilterChain app(HttpSecurity http) throws Exception {
 
 [공식문서](https://docs.spring.io/spring-security/reference/5.7/servlet/authentication/persistence.html)
 
-Spring Security 5.7부터 SecurityContextPersistenceFilter가 SecurityContextHolderFilter로 대체되어 사용된다. 두 필터의 차이점을 알아보자.
+Spring Security 5.7부터 ``SecurityContextPersistenceFilter``가 ``SecurityContextHolderFilter``로 대체되어 사용된다. 두 필터의 차이점을 알아보자.
 
 ### SecurityContextPersistenceFilter
 ![securitycontextpersistencefilter](https://github.com/sunyesle/TIL/assets/45172865/706d440d-0eb2-411a-b42e-e709d9fa77ab)
@@ -145,9 +145,10 @@ private void doFilter(HttpServletRequest request, HttpServletResponse response, 
     }
 }
 ```
-SecurityContextPersistenceFilter와 다르게 loadContext()가 아닌 loadDeferredContext() 메서드를 호출하고 있다.
+``SecurityContextPersistenceFilter``와 다르게 ``loadContext()``가 아닌 ``loadDeferredContext()`` 메서드를 호출하고 있다.
 
-SecurityContextRepository의 loadDeferredContext() 메서드를 확인해 보자.
+``SecurityContextRepository``의 ``loadDeferredContext()`` 메서드를 확인해 보자.
+> SecurityContextRepository
 ```java
 default DeferredSecurityContext loadDeferredContext(HttpServletRequest request) {
     Supplier<SecurityContext> supplier = () -> {
