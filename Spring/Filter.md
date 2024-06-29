@@ -2,6 +2,12 @@
 필터는 리소스에 대한 요청과 응답에 대해 필터링 작업을 수행하는 객체이다.
 서블릿에서 제공하는 기능으로 Servlet 컨테이너(WAS)에서 관리한다.
 
+![spring-boot-filter](https://github.com/sunyesle/TIL/assets/45172865/95fc2a1f-fd48-4cae-9175-18d323172840)
+
+필터를 추가하기 위해서는 javax.servlet의 Filter 인터페이스를 구현해야한다.
+- `init` : 필터 초기화 메서드, 서블릿 컨테이너가 생성될 때 호출한다.
+- `doFilter` : 요청이 올 떄마다 해당 메서드가 호출한다.
+- `destroy` : 필터 종료 메서드, 서블릿 컨테이너가 종료될 때 호출한다.
 ```java
 public interface Filter {
     default void init(FilterConfig filterConfig) throws ServletException {
@@ -13,14 +19,11 @@ public interface Filter {
     }
 }
 ```
-- `init` : 필터 초기화 메서드, 서블릿 컨테이너가 생성될 때 호출한다.
-- `doFilter` : 요청이 올 떄마다 해당 메서드가 호출한다.
-- `destroy` : 필터 종료 메서드, 서블릿 컨테이너가 종료될 때 호출한다.
 
 ## 필터 등록 방법
 
 ### 1. @Component
-`Filter` 인터페이스를 구현하고 빈으로 등록한다. 정의한 필터가 여러 개 존재하는 경우, `@Order` 어노테이션을 통해 순서를 지정할 수 있다.
+`Filter` 인터페이스를 구현하고 빈으로 등록한다. 정의한 필터가 여러 개 존재하는 경우, `@Order`를 통해 순서를 지정할 수 있다.
 ```java
 @Component
 @Order(1)
