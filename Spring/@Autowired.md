@@ -46,3 +46,9 @@ public class MyExample {
     private HelloService helloService;
 }
 ```
+
+---
+**Reference**
+- https://www.baeldung.com/spring-autowire
+- https://madplay.github.io/post/why-constructor-injection-is-better-than-field-injection
+- https://m42-orion.tistory.com/100#%E2%9B%85%EF%B8%8F%20%EC%83%9D%EC%84%B1%EC%9E%90%20%EC%A3%BC%EC%9E%85-1
