@@ -1,23 +1,20 @@
 # Factory 패턴
-다양한 종류의 동물을 생성하는 예제와 함께 팩토리 패턴에 대해 알아보자.
 
 ## Example
-> Animal 인터페이스
+다양한 종류의 동물을 생성하는 예제와 함께 팩토리 패턴에 대해 알아보자.
 ```java
+// Animal 인터페이스
 public interface Animal {
     void speak();
 }
-```
-> Animal 구현 클래스
-```java
+
 public class Cat implements Animal {
     @Override
     public void speak() {
         System.out.println("야옹~🐱");
     }
 }
-```
-```java
+
 public class Dog implements Animal {
     @Override
     public void speak() {
@@ -74,22 +71,19 @@ Animal dog = animalFactory.createAnimal(AnimalType.DOG);
 
 ### Factory Method 패턴이란?
 객체 생성 인터페이스를 정의하고, 구체적인 객체 생성 로직을 하위 클래스에 위임하는 디자인 패턴이다.
-> AnimalFactory 인터페이스
 ```java
+// AnimalFactory 인터페이스
 public interface AnimalFactory {
     Animal createAnimal();
 }
-```
-> AnimalFactory 구현 클래스
-```java
+
 public class CatFactory implements AnimalFactory {
     @Override
     public Animal createAnimal() {
         return new Cat();
     }
 }
-```
-```java
+
 public class DogFactory implements AnimalFactory {
     @Override
     public Animal createAnimal() {
@@ -107,7 +101,115 @@ Animal dog = dogFactory.createAnimal();
 새로운 Animal 구현 클래스가 추가되어도 기존 코드를 수정하지 않고 확장할 수 있다.
 예를 들어, Bird를 추가한다면 Bird 클래스를 정의하고 BirdFactory 클래스를 구현하면 된다.
 
+<br>
+
+# Abstract Factory
+
+### Abstract Factory 패턴이란?
+관련된 객체들을 생성하기 위한 인터페이스를 정의하고, 객체들을 생성하는 책임을 하위 클래스에 위임하는 디자인 패턴이다.
+
+## Example
+GUI 라이브러리에서 운영체제에 따라 다른 UI 컴포넌트를 생성하는 예제와 함께 추상 팩토리 패턴에대해 알아보자.
+> Button
+```java
+public interface Button {
+    void paint();
+}
+
+public class WindowsButton implements Button {
+    @Override
+    public void paint() {
+        System.out.println("Windows 버튼 생성");
+    }
+}
+
+public class MacOSButton implements Button{
+    @Override
+    public void paint() {
+        System.out.println("MacOS 버튼 생성");
+    }
+}
+```
+> CheckBox
+```java
+public interface CheckBox {
+    void paint();
+}
+
+public class WindowsCheckBox implements CheckBox{
+    @Override
+    public void paint() {
+        System.out.println("Windows 체크박스 생성");
+    }
+}
+
+public class MacOSCheckBox implements CheckBox{
+    @Override
+    public void paint() {
+        System.out.println("MacOS 체크박스 생성");
+    }
+}
+```
+> GUIFactory
+```java
+// 추상 팩토리
+public interface GUIFactory {
+    Button createButton();
+    CheckBox createCheckBox();
+}
+
+public class WindowsFactory implements GUIFactory {
+    @Override
+    public Button createButton() {
+        return new WindowsButton();
+    }
+
+    @Override
+    public CheckBox createCheckBox() {
+        return new WindowsCheckBox();
+    }
+}
+
+public class MacOSFactory implements GUIFactory {
+    @Override
+    public Button createButton() {
+        return new MacOSButton();
+    }
+
+    @Override
+    public CheckBox createCheckBox() {
+        return new MacOSCheckBox();
+    }
+}
+```
+**Client**<br>
+```java
+public class AbstractFactoryApp {
+    public static void main(String[] args) {
+        Application app = new Application(new WindowsFactory());
+        app.paint();
+    }
+
+    public class Application {
+        private Button button;
+        private Checkbox checkbox;
+
+        public Application(GUIFactory factory) {
+            button = factory.createButton();
+            checkbox = factory.createCheckbox();
+        }
+
+        public void paint() {
+            button.paint();
+            checkbox.paint();
+        }
+    }
+}
+```
+관련된 객체들의 생성 로직을 하나의 팩토리에 모아둘 수 있다.
+
 ---
 **Reference**
 - https://bcp0109.tistory.com/366
 - https://donxu.tistory.com/entry/Factory-Method-Pattern%ED%8C%A9%ED%86%A0%EB%A6%AC-%EB%A9%94%EC%84%9C%EB%93%9C-%ED%8C%A8%ED%84%B4
+- https://oobwrite.com/entry/%EB%94%94%EC%9E%90%EC%9D%B8-%ED%8C%A8%ED%84%B4-%EC%B6%94%EC%83%81-%ED%8C%A9%ED%86%A0%EB%A6%AC-%ED%8C%A8%ED%84%B4-%EA%B0%9D%EC%B2%B4-%EC%83%9D%EC%84%B1%EC%9D%98-%EC%9C%A0%EC%97%B0%EC%84%B1%EA%B3%BC-%ED%99%95%EC%9E%A5%EC%84%B1-%EA%B7%B9%EB%8C%80%ED%99%94
