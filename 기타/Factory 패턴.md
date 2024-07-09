@@ -71,6 +71,9 @@ Animal dog = animalFactory.createAnimal(AnimalType.DOG);
 
 ### Factory Method 패턴이란?
 객체 생성 인터페이스를 정의하고, 구체적인 객체 생성 로직을 하위 클래스에 위임하는 디자인 패턴이다.
+
+![factoryMethod_structure](https://github.com/sunyesle/TIL/assets/45172865/85c3cc3e-0408-4b90-9c6e-0fa96a0e8b38)
+
 ```java
 // AnimalFactory 인터페이스
 public interface AnimalFactory {
@@ -108,8 +111,10 @@ Animal dog = dogFactory.createAnimal();
 ### Abstract Factory 패턴이란?
 관련된 객체들을 생성하기 위한 인터페이스를 정의하고, 객체들을 생성하는 책임을 하위 클래스에 위임하는 디자인 패턴이다.
 
+![abstractFactory_structure](https://github.com/sunyesle/TIL/assets/45172865/76a77062-cfa3-46ad-aa88-21db7b52dcdd)
+
 ## Example
-GUI 라이브러리에서 운영체제에 따라 다른 UI 컴포넌트를 생성하는 예제와 함께 추상 팩토리 패턴에대해 알아보자.
+GUI 라이브러리에서 운영체제에 따라 다른 UI 컴포넌트를 생성하는 예제와 함께 추상 팩토리 패턴에 대해 알아보자.
 > Button
 ```java
 public interface Button {
@@ -212,4 +217,5 @@ public class AbstractFactoryApp {
 **Reference**
 - https://bcp0109.tistory.com/366
 - https://donxu.tistory.com/entry/Factory-Method-Pattern%ED%8C%A9%ED%86%A0%EB%A6%AC-%EB%A9%94%EC%84%9C%EB%93%9C-%ED%8C%A8%ED%84%B4
+- https://refactoring.guru/ko/design-patterns/factory-comparison
 - https://oobwrite.com/entry/%EB%94%94%EC%9E%90%EC%9D%B8-%ED%8C%A8%ED%84%B4-%EC%B6%94%EC%83%81-%ED%8C%A9%ED%86%A0%EB%A6%AC-%ED%8C%A8%ED%84%B4-%EA%B0%9D%EC%B2%B4-%EC%83%9D%EC%84%B1%EC%9D%98-%EC%9C%A0%EC%97%B0%EC%84%B1%EA%B3%BC-%ED%99%95%EC%9E%A5%EC%84%B1-%EA%B7%B9%EB%8C%80%ED%99%94
