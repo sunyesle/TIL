@@ -1,5 +1,9 @@
 # Factory 패턴
 
+객체의 생성 절차가 복잡하거나 다양한 조건에 따라 객체를 생성해야 할 때, 팩토리 메서드를 사용하면 생성 로직을 캡슐화할 수 있다. (관심사의 분리)
+
+객체를 생성하는 방법이 한 가지 이상일 경우, 생성자는 클래스 이름과 동일해야 하므로 그 의미가 모호해질 수 있다. 그러나 팩토리 메서드를 사용하면 메서드 이름을 통해 생성되는 객체의 용도나 생성 방식을 명확히 전달할 수 있다.
+
 ## Example
 다양한 종류의 동물을 생성하는 예제와 함께 팩토리 패턴에 대해 알아보자.
 ```java
@@ -219,3 +223,4 @@ public class AbstractFactoryApp {
 - https://donxu.tistory.com/entry/Factory-Method-Pattern%ED%8C%A9%ED%86%A0%EB%A6%AC-%EB%A9%94%EC%84%9C%EB%93%9C-%ED%8C%A8%ED%84%B4
 - https://refactoring.guru/ko/design-patterns/factory-comparison
 - https://oobwrite.com/entry/%EB%94%94%EC%9E%90%EC%9D%B8-%ED%8C%A8%ED%84%B4-%EC%B6%94%EC%83%81-%ED%8C%A9%ED%86%A0%EB%A6%AC-%ED%8C%A8%ED%84%B4-%EA%B0%9D%EC%B2%B4-%EC%83%9D%EC%84%B1%EC%9D%98-%EC%9C%A0%EC%97%B0%EC%84%B1%EA%B3%BC-%ED%99%95%EC%9E%A5%EC%84%B1-%EA%B7%B9%EB%8C%80%ED%99%94
+- https://jake-seo-dev.tistory.com/366
