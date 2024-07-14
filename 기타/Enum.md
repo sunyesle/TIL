@@ -118,8 +118,87 @@ void operationTest(){
 2.000000 / 4.000000 = 0.500000
 ```
 
+## 열거타입을 Map의 key로 사용해야 할 때
+
+다음 코드는 식물을 나타내는 Plant 클래스로 내부적으로 식물의 생애주기를 Enum 필드로 갖는다.
+```java
+public class Plant{
+    enum LifeCycle{
+        ANNUAL, PERENNIAL, BIENNIAL;
+    }
+
+    final String name;
+    final LifeCycle lifeCycle;
+
+    public Plant(String name, LifeCycle lifeCycle){
+        this.name = name;
+        this.lifeCycle = lifeCycle;
+    }
+
+    @Override
+    public String toString(){
+        return name;
+    }
+}
+```
+이러한 식물(Plant)이 여럿 있다고 할 때 생애주기를 기준으로 집합을 만들어 관리하고 싶다고 하자.
+```java
+private final Plant[] garden = {
+        new Plant("바질", Plant.LifeCycle.ANNUAL),
+        new Plant("캐러웨이", Plant.LifeCycle.BIENNIAL),
+        new Plant("딜", Plant.LifeCycle.ANNUAL),
+        new Plant("라벤더", Plant.LifeCycle.PERENNIAL),
+        new Plant("파슬리", Plant.LifeCycle.BIENNIAL),
+        new Plant("로즈마리", Plant.LifeCycle.PERENNIAL),
+};
+```
+
+### EnumMap
+EnumMap은 열거 타입을 키로 사용하도록 설계한 Map 구현체이다.
+- 배열 인덱스를 계산하는 과정에서 오류가 날 가능성이 없다.
+- 내부적으로는 ordinal을 인덱스로 하는 배열을 사용하기 때문에 직접 배열을 사용하는 것과 성능이 비등하다.
+- Map의 타입 안정성 + 배열의 성능 모두 얻을 수 있다.
+- 맵의 키인 열거 타입이 그 자체로 출력용 문자열을 제공한다.
+```java
+@Test
+void EnumMap(){
+    Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle = new EnumMap<>(Plant.LifeCycle.class);
+
+    for(Plant.LifeCycle lc : Plant.LifeCycle.values()){
+        plantsByLifeCycle.put(lc, new HashSet<>());
+    }
+
+    for (Plant p : garden){
+        plantsByLifeCycle.get(p.lifeCycle).add(p);
+    }
+
+    System.out.println(plantsByLifeCycle);
+}
+```
+> 출력
+```
+{ANNUAL=[딜, 바질], PERENNIAL=[라벤더, 로즈마리], BIENNIAL=[캐러웨이, 파슬리]}
+```
+
+<br>
+
+Stream을 사용해 Map을 관리하면 코드를 더 줄일 수 있다. [(Collectors.groupingBy 참고)](https://umanking.github.io/2021/07/31/java-stream-grouping-by-example/)
+```java
+@Test
+void EnumMap_stream활용() {
+    Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle = Arrays.stream(garden)
+            .collect(groupingBy(
+                            p -> p.lifeCycle, // 각 요소를 그룹화할 때 사용할 키를 반환
+                            () -> new EnumMap<>(Plant.LifeCycle.class), // 결과 Map의 구현을 제공
+                            toSet() // 각 그룹에 대해 컬렉션 작업을 정의
+                    )
+            );
+    System.out.println(plantsByLifeCycle);
+}
+```
 ---
 **Reference**
 - https://catsbi.oopy.io/4678b976-bd7e-4353-b4f0-04c06f66df03
 - https://jjingho.tistory.com/91
 - https://happyer16.tistory.com/entry/6-Enums-and-Annotations-Effective-Java-3th
+- https://dahye-jeong.gitbook.io/java/java/effective_java/2021-06-06-use-enummap
