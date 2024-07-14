@@ -161,7 +161,7 @@ EnumMap은 열거 타입을 키로 사용하도록 설계한 Map 구현체이다
 - 맵의 키인 열거 타입이 그 자체로 출력용 문자열을 제공한다.
 ```java
 @Test
-void EnumMap(){
+void enumMapTest(){
     Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle = new EnumMap<>(Plant.LifeCycle.class);
 
     for(Plant.LifeCycle lc : Plant.LifeCycle.values()){
@@ -185,7 +185,7 @@ void EnumMap(){
 Stream을 사용해 Map을 관리하면 코드를 더 줄일 수 있다. [(Collectors.groupingBy 참고)](https://umanking.github.io/2021/07/31/java-stream-grouping-by-example/)
 ```java
 @Test
-void EnumMap_stream활용() {
+void enumMapStreamTest() {
     Map<Plant.LifeCycle, Set<Plant>> plantsByLifeCycle = Arrays.stream(garden)
             .collect(groupingBy(
                             p -> p.lifeCycle, // 각 요소를 그룹화할 때 사용할 키를 반환
@@ -196,9 +196,34 @@ void EnumMap_stream활용() {
     System.out.println(plantsByLifeCycle);
 }
 ```
+
+## 열거타입 상수들이 집합으로 사용될 경우
+
+### EnumSet
+- 열거타입 값만 저장할 수 있으며 모든 값은 동일한 열거타입이어야 한다.
+- null 값을 추가하는 것을 허용하지 않는다. null 값을 추가하려고 하면 NullPointerException이 발생한다.
+- 내부적으로 비트 벡터로 구현되어 있어 성능이 뛰어나다.
+
+```java
+public class Text {
+    public enum Style { BOLD, ITALIC, UNDERLINE, STRIKETHROUGH }
+    public void applyStyles(Set<Style> styleSet){
+    }
+}
+```
+```java
+@Test
+void enumSetTest(){
+    Text text = new Text();
+    text.applyStyles(EnumSet.of(Text.Style.BOLD, Text.Style.ITALIC));
+}
+```
+
 ---
 **Reference**
 - https://catsbi.oopy.io/4678b976-bd7e-4353-b4f0-04c06f66df03
 - https://jjingho.tistory.com/91
 - https://happyer16.tistory.com/entry/6-Enums-and-Annotations-Effective-Java-3th
 - https://dahye-jeong.gitbook.io/java/java/effective_java/2021-06-06-use-enummap
+- https://www.baeldung.com/java-enumset
+- https://honbabzone.com/java/java-enum/
