@@ -76,6 +76,57 @@ customLogMessageFormat=| %(executionTime) ms | %(sql)
 ```
 자세한 정보는 [공식 문서](https://p6spy.readthedocs.io/en/latest/configandusage.html)에서 확인할 수 있다.
 
+## 로그 포맷 커스텀
+쿼리를 포매팅해 주는 커스텀 포매터를 만들어보자. 쿼리 포매팅에는 Hibernate의 formatter를 사용했다.
+```java
+public class P6spyPrettySqlFormat implements MessageFormattingStrategy {
+    @Override
+    public String formatMessage(int connectionId, String now, long elapsed, String category, String prepared, String sql, String url) {
+        sql = formatSql(category, sql);
+        return now + " | " + elapsed + "ms | " + category + " | connection " + connectionId + " | " + P6Util.singleLine(prepared) + sql;
+    }
+
+    private String formatSql(String category, String sql) {
+        if(sql == null || sql.isBlank()) return sql;
+
+        if(Category.STATEMENT.getName().equals(category)){
+            String tempSql = sql.trim().toLowerCase(Locale.ROOT);
+            if(tempSql.startsWith("create") || tempSql.startsWith("alter") || tempSql.startsWith("comment")){
+                sql = FormatStyle.DDL.getFormatter().format(sql);
+            }else{
+                sql = FormatStyle.BASIC.getFormatter().format(sql);
+            }
+        }
+        return "|\nHeFormatSql(P6Spy sql,Hibernate format):" + sql;
+    }
+}
+```
+포매터는 다음과 같이 적용할 수 있다.
+```java
+@Configuration
+public class P6spyConfig {
+    
+    @PostConstruct
+    public void setLogMessageFormat() {
+        P6SpyOptions.getActiveInstance().setLogMessageFormat(P6spyPrettySqlFormatter.class.getName());
+    }
+}
+```
+
+```log
+2024-07-27T21:22:10.727+09:00  INFO 13816 --- [nio-8080-exec-1] p6spy                                    : p6spy                                    : 1721967338735 | 1ms | statement | connection 6 | select p1_0.id,p1_0.company_id,p1_0.name,p1_0.product_type from product p1_0 where p1_0.id=?|
+HeFormatSql(P6Spy sql,Hibernate format):
+    select
+        p1_0.id,
+        p1_0.company_id,
+        p1_0.name,
+        p1_0.product_type 
+    from
+        product p1_0 
+    where
+        p1_0.id=1
+```
+
 ---
 **Reference**<br>
 - https://github.com/gavlyukovskiy/spring-boot-data-source-decorator?tab=readme-ov-file
