@@ -348,6 +348,115 @@ fun main(){
 Pair의 내용으로 두 변수를 즉시 초기화 할 수 있다.
 이런 기능을 **구조 분해 선언**(destructuring declaration) 이라고 부른다.
 
+## 3.5 문자열과 정규식 다루기
+코틀린 문자열은 자바 문자열과 같다.
+
+### 3.5.1 문자열 나누기
+자바의 split 메서드는 정규식을 인자로 받는다.
+코틀린에서는 여러가지 split 확장 함수를 제공한다.
+```kotlin
+// 정규식을 명시적으로 만든다.
+println("12.345-6.A".split("\\.|-".toRegex())) // [12, 345, 6, A]
+
+// 여러 구분 문자열을 사용한다.
+println("12.345-6.A".split(".", "-")) // [12, 345, 6, A]
+```
+
+### 3.5.2 정규식과 3중 따옴표로 묶은 문자열
+3중 따옴표 문자열에서는 역슬래시(`\`)를 포함한 어떤 문자도 이스케이프할 필요가 없다.
+수많은 이스케이프가 필요한 문자열의 경우 3중 따옴표 문자열을 사용하면 더 깔끔하게 표현할 수 있다.
+```kotlin
+fun parsePath(path: String) {
+    val regex = """(.+)/(.+)\.(.+)""".toRegex()
+    val matchResult = regex.matchEntire(path)
+    if(matchResult != null){
+        val(directory, filename, extension) = matchResult.destructured
+        println("Dir: $directory, name: $filename, ext: $extension")
+    }
+}
+```
+```kotlin
+parsePath("/User/yole/kotlin-book/chapter.adoc") // Dir: /User/yole/kotlin-book, name: chapter, ext: adoc
+```
+
+### 3.5.3 여러 줄 3중 따옴표 문자열
+3중 따옴표를 이용하면 줄바꿈이 들어있는 텍스트를 쉽게 문자열로 만들 수 있다.
+```kotlin
+val kolinLogo = """|  //
+                  .| //
+                  .|/ \""".trimMargin(".")
+println(kolinLogo)
+/* 출력
+|  //
+| //
+|/ \
+*/
+```
+가독성을 위해 들여쓰기의 끝부분을 특별한 문자열로 표시하고, trimMargin을 사용해 그 문자열과 그 직전의 공백을 없앤다.
+이 예제에서는 `.`를 들여쓰기 구분 문자열로 사용했다.
+
+## 3.6 코드 다듬기: 로컬 함수와 확장
+**코드 중복을 보여주는 예제**
+```kotlin
+class User(val id: Int, val name: String, val address: String)
+
+fun saveUser(user: User) {
+    if (user.name.isEmpty()) {
+        throw IllegalArgumentException(
+            "Can't save user${user.id}: empty Name"
+        )
+    }
+    if (user.address.isEmpty()) {
+        throw IllegalArgumentException(
+            "Can't save user${user.id}: empty Address"
+        )
+    }
+    // user을 데이터베이스에 저장한다.
+}
+```
+검증 코드를 로컬 함수로 분리하면 중복을 없애는 동시에 코드 구조를 깔끔하게 유지할 수 있다.
+
+**로컬 함수를 사용해 코드 중복 줄이기**
+
+로컬 함수는 자신이 속한 바깥 함수의 모든 파라미터와 변수를 사용할 수 있다.
+중첩된 함수의 깊이가 깊어지면 코드를 읽기 어려워지기 때문에 일반적으로는 한 단계만 함수를 중첩시키라고 권장한다.
+```kotlin
+fun saveUser(user:User){
+    fun validate(value:String, fieldName:String){
+        if(value.isEmpty()){
+            throw IllegalArgumentException(
+                "Can't save user${user.id}: empty ${fieldName}" // 바깥 함수의 파라미터(user)에 직접 접근할 수 있다.
+            )
+        }
+    }
+    validate(user.name, "Name")
+    validate(user.address, "Address")
+    // user을 데이터베이스에 저장한다.
+}
+```
+
+예제를 더 개선하고 싶다면 User 클래스를 확장한 함수로 만들 수도 있다.
+
+**검증 로직을 확장 함수로 추출하기**
+```kotlin
+fun User.validateBeforeSave() {
+    fun validate(value:String, fieldName:String){
+        if(value.isEmpty()){
+            throw IllegalArgumentException(
+                "Can't save user $id: empty ${fieldName}" // 바깥 함수의 파라미터(user)에 직접 접근할 수 있다.
+            )
+        }
+    }
+    validate(name, "Name")
+    validate(address, "Address")
+}
+
+fun saveUser(user: User){
+    user.validateBeforeSave()
+    // user을 데이터베이스에 저장한다.
+}
+```
+
 ---
 **Reference**<br>
 - Kotlin in Action
