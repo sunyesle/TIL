@@ -173,11 +173,74 @@ sealed class Expr{ // 기반 클래스를 sealed로 봉인한다.
 }
 
 fun eval(e: Expr): Int =
-    when(e) {
+    when(e) { // when 식에서 sealed 클래스의 모든 하위 클래스를 처리한다면 디폴트 분기가 필요 없다.
         is Expr.Num -> e.value
         is Expr.Sum -> eval(e.left) + eval(e.left)
     }
 ```
+
+## 4.2 뻔하지 않은 생성자와 프로퍼티를 갖는 클래스 선언
+코틀린은 주(primary) 생성자와 부(secondary) 생성자를 구분한다.
+주 생성자는 클래스 본문 밖에서, 부 생성자는 클래스 본문 안에서 정의한다.
+
+### 4.2.1 클래스 초기화: 주 생성자와 초기화 블록
+```kotlin
+class User(val nickname: String)
+```
+위 코드를 명시적으로 풀어서 보면 다음과 같다.
+```kotlin
+class User constructor(val _nickname: String) { // 파라미터가 하나만 있는 주 생성자
+    val nickname: String
+    init { // 초기화 블록
+        nickname = _nickname
+    }
+}
+```
+- `constructor`: 생성자 정의를 시작할 때 사용한다. 주 생성자 앞에 어노테이션이나 가시성 변경자가 없다면 `constructor`를 생략해도 된다.
+- `init`: 초기화 블록을 시작한다. 초기화 블록은 주 생성자와 함께 사용된다. 클래스의 객체가 만들어질 때 실행될 초기화 코드가 들어간다.
+
+모든 생성자 파라미터에 디폴트 값을 지정하면 컴파일러가 자동으로 파라미터 없는 생성자를 만들어준다.
+
+**기반 클래스 생성자 호출**<br>
+기반 클래스를 초기화하려면 기반 클래스 이름 뒤에 괄호를 치고 생성자 인자를 넘긴다.
+```kotlin
+open class User(val nickname: String) {}
+class TwitterUser(nickname: String) : User(nickname) { // 기반클래스의 생성자 호출
+}
+
+open class Button // 컴파일러가 자동으로 인자가 없는 디폴트 생성자를 만들어준다.
+class RadioButton: Button() // 하위 클래스에서 반드시 기반클래스의 생성자를 호출해야 한다.
+```
+> 클래스 정의에 있는 상위 클래스 및 인터페이스 목록에서 이름 뒤에 괄호 유무로 클래스와 인터페이스를 구분할 수 있다.
+
+**가시성 변경**<br>
+```kotlin
+class Secretive private constructor() {} // 주 생성자의 가시성 변경
+```
+> **비공개 생성자에 대한 대안**<br>
+> 정적 유틸리티 함수 대신 최상위 함수, 싱글턴을 사용하고 싶으면 객체 선언
+
+### 4.2.2 부 생성자: 상위 클래스를 다른 방식으로 초기화
+```kotlin
+open class View {
+    constructor(ctx: Context) { // 부 생성자
+        // ...
+    }
+    constructor(ctx: Context, attr: AttributeSet){
+        // ...
+    }
+}
+
+class MyView : View {
+    constructor(ctx: Context) : this(ctx, MY_STYLE) { // this() 키워드로 이 클래스의 다른 생성자에게 위임한다.
+        // ...
+    }
+    constructor(ctx: Context, attr: AttributeSet) : super(ctx, attr) { // super() 키워드로 상위 클래스의 생성자를 호출한다.
+        // ...
+    }
+}
+```
+클래스에 주 생성자가 없다면 모든 부 생성자는 반드시 상위 클래스를 초기화하거나 다른 생성자에게 생성을 위임해야한다.
 
 ---
 **Reference**<br>
