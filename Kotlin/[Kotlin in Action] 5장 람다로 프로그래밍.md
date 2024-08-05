@@ -179,6 +179,59 @@ val dmitrysAgeFunction = p::age // 바운드 멤버 참조
 println(dmitrysAgeFunction())
 ```
 
+## 5.2 컬렉션 함수형 API
+### 5.2.1 필수적인 함수: filter와 map
+숫자를 사용한 예제와 Person을 사용한 예제를 통해 컬렉션을 다루는 코틀린 표준 라이브러리를 살펴보자.
+```kotlin
+data class Person(val name: String, val age: Int
+```
+
+#### filter
+주어진 술어(참/거짓을 반환하는 함수)를 만족하는 모든 원소를 선택한다. (원치 않는 원소를 제거)
+```kotlin
+val list = listOf(1, 2, 3, 4)
+println(list.filter { it % 2 == 0 }) // [2, 4]
+
+val people = listOf(Person("Alice", 29), Person("Bob", 31))
+println(people.filter { it.age > 30 }) // [Person(name=Bob, age=31)]
+```
+
+#### map
+주어진 람다를 컬렉션의 각 원소에 적용한 결과를 모아서 새 컬렉션을 만든다. (원소를 반환)
+```kotlin
+val list = listOf(1, 2, 3, 4)
+println(list.map { it * it }) // [1, 4, 9, 16]
+
+val people = listOf(Person("Alice", 29), Person("Bob", 31))
+println(people.map { it.name }) // [Alice, Bob]
+println(people.map(Person::name)) // 멤버 참조를 사용해 작성할 수도 있다.
+```
+
+#### filterKeys, mapKeys, filterValues, mapValues
+필터와 변환 함수를 맵에 적용할 수도 있다. 맵의 경우 키와 값을 처리하는 함수가 따로 존재한다.
+```kotlin
+val numbers = mapOf(0 to "zero", 1 to "one")
+println(numbers.mapValues { it.value.uppercase() }) // {0=ZERO, 1=ONE}
+```
+
+### 5.2.2 all, any, count, find: 컬렉션에 술어 적용
+```kotlin
+val canBeInClub30 = { p: Person -> p.age <= 30 }
+
+// all : 모든 원소가 술어를 만족하는지
+val people = listOf(Person("Alice", 29), Person("Bob", 31))
+println(people.all(canBeInClub30)) // false
+
+// any : 하나라도 술어를 만족하는지
+println(people.any(canBeInClub30)) // true
+
+// count : 술어를 만족한는 원소의 개수를 구한다.
+println(people.count(canBeInClub30)) // 1
+
+// find : 술어를 만족하는 원소를 찾는다.
+println(people.find(canBeInClub30)) // Person(name=Alice, age=29)
+```
+
 ---
 **Reference**<br>
 - Kotlin in Action
