@@ -87,17 +87,17 @@ public class P6spyPrettySqlFormat implements MessageFormattingStrategy {
     }
 
     private String formatSql(String category, String sql) {
-        if(sql == null || sql.isBlank()) return sql;
+        if (sql == null || sql.isBlank()) return sql;
 
-        if(Category.STATEMENT.getName().equals(category)){
+        if (Category.STATEMENT.getName().equals(category)) {
             String tempSql = sql.trim().toLowerCase(Locale.ROOT);
-            if(tempSql.startsWith("create") || tempSql.startsWith("alter") || tempSql.startsWith("comment")){
+            if (tempSql.startsWith("create") || tempSql.startsWith("alter") || tempSql.startsWith("comment")) {
                 sql = FormatStyle.DDL.getFormatter().format(sql);
-            }else{
+            } else {
                 sql = FormatStyle.BASIC.getFormatter().format(sql);
             }
         }
-        return "|\nHeFormatSql(P6Spy sql,Hibernate format):" + sql;
+        return " |\nFormatSql(P6Spy sql,Hibernate format):" + sql;
     }
 }
 ```
