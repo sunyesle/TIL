@@ -118,7 +118,7 @@ private List<Comment> comments = new ArrayList<>();
 ```
 
 실행되는 쿼리를 확인해 보면 Comment 엔티티를 가져오지만, 댓글의 수만큼 추가 조회 쿼리가 나간다.
-```
+```sql
 select p1_0.id,p1_0.content,p1_0.title from post p1_0
 select c1_0.post_id,c1_0.id,c1_0.content from comment c1_0 where c1_0.post_id=1
 select c1_0.post_id,c1_0.id,c1_0.content from comment c1_0 where c1_0.post_id=2
@@ -143,7 +143,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 }
 ```
 실행되는 쿼리를 확인해 보면 left join으로 댓글 정보를 함께 가져오고 있다.
-```
+```sql
 select
     p1_0.id,
     c1_0.post_id,
@@ -157,4 +157,13 @@ left join
     comment c1_0 
         on p1_0.id=c1_0.post_id
 ```
-@EntityGraph는 쿼리메서드, jpql과도 함께 사용할 수 있다.
+
+@EntityGraph는 쿼리메서드, JPQL과도 함께 사용할 수 있다.
+```java
+@EntityGraph(attributePaths = "comments")
+List<Post> findByTitle(String title);
+
+@EntityGraph(attributePaths = "comments")
+@Query("SELECT p FROM Post p WHERE p.title = :title")
+List<Post> findByTitleJpql(String title);
+```
