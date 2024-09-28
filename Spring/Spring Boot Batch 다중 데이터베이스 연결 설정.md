@@ -67,6 +67,13 @@ public class MetaDBConfig {
 JPA를 사용할 예정이기 때문에 관련 설정도 함께 진행한다.
 
 EntityManagerFactory와 TransactionManager 빈을 생성하고, @EnableJpaRepositories 어노테이션에 지정해 준다.
+
+#### setJpaPropertyMap Hibernate 설정
+자세한 내용은 하단 링크에서 확인할 수 있다.
+- `hibernate.hbm2ddl.auto` : DDL 생성 전략을 지정한다.
+- `hibernate.show_sql` : SQL 출력 여부를 지정한다.
+- `hibernate.physical_naming_strategy` : 사용할 PhysicalNamingStrategy를 지정한다.
+
 ```java
 @Configuration
 @EnableJpaRepositories(
@@ -113,3 +120,9 @@ public class DataDBConfig {
 - https://charliezip.tistory.com/33
 - https://milenote.tistory.com/171
 - https://ride-dev.tistory.com/97
+
+**Hibernate 설정 관련**<br>
+- https://jong-bae.tistory.com/59
+- [hibernate-orm GitHub](https://github.com/hibernate/hibernate-orm/blob/6.5/etc/hibernate.properties)
+- [공식문서 userguide](https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#settings)
+- [공식문서 introduction](https://docs.jboss.org/hibernate/orm/6.5/introduction/html_single/Hibernate_Introduction.html#configuration)
