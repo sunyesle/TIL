@@ -83,6 +83,8 @@ Spring은 트랜잭션 관리를 편리하게 수행할 수 있도록 **선언�
 Spring AOP는 기본적으로 프록시 방식으로 동작하며, CGLIB 또는 JDK Dynamic Proxy로 프록시 객체를 생성한다.
 ``@Transactional`` 어노테이션이 적용된 경우, Spring은 트랜잭션 프록시 객체를 생성하여 대상 객체를 감싼다.
 
+> 프록시 방식의 AOP는 대상 객체의 내부에서 메서드 호출이 발생하면 프록시를 거치지 않고 대상 객체를 직접 호출하기 때문에 트랜잭션이 적용되지 않는다.
+
 ![transactional](https://github.com/sunyesle/TIL/assets/45172865/c49de2d3-a504-4bc3-b787-d5e226fa28e7)
 
 **[동작방식]**
