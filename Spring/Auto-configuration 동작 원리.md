@@ -55,6 +55,9 @@ ImportSelector의 selectImport() 메서드는 String 배열을 리턴하는데, 
 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 파일에 정의되어 있는 AutoConfiguration 클래스들을 읽어온다.
 그 뒤, exclude 할 class와 filter 조건을 보면서 실제로 주입할 설정 정보를 결정한다.
 
+대부분의 AutoConfiguration 클래스에는 하나 이상의 @Conditional 어노테이션을 포함하고있다.
+Conditional 어노테이션은 특정 조건이 충족될 때만 빈을 등록하거나 구성을 적용하도록 하는 기능을 제공한다.
+
 ---
 **Reference**
 - https://docs.spring.io/spring-boot/reference/features/developing-auto-configuration.html
