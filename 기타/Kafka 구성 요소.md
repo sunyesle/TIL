@@ -40,6 +40,15 @@ Partition이 여러 개일 경우 Producer가 보낸 메시지의 순서는 보�
 
 ![reader-follwer](https://github.com/user-attachments/assets/d458adac-d329-4a12-a509-a177ce955309)
 
+### Replication
+Kafka는 높은 가용성을 보장하기 위해 파티션을 여러 브로커에 복제한다. 이를 통해, 하나의 브로커에 장애가 발생해도 시스템은 계속 작동할 수 있다.
+
+각 Topic 별로 Replication Factor 값을 설정할 수 있다.
+
+![replication_0](https://github.com/user-attachments/assets/2f476e37-5b4e-42cc-a736-d0850337f4f4)
+
+![replication_1](https://github.com/user-attachments/assets/157a9c97-443d-45ec-9a21-cb54ed97ee7f)
+
 ## Segment
 메시지를 저장하는 물리적인 단위.
 
