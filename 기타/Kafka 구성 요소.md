@@ -3,6 +3,8 @@
 ## Broker
 카프카를 구성하는 물리적인 서버.
 
+프로듀서와 컨슈머 사이에서 메시지를 저장, 관리한다.
+
 ![broker](https://github.com/user-attachments/assets/6607fcf8-5e3d-4fdb-8c08-620033fb5276)
 
 ## Kafka Cluster
@@ -66,6 +68,9 @@ Kafka에서 전송되는 메시지 또는 데이터의 최소 단위.
 
 ## Consumer
 Topic의 메시지를 가져와서 소비하는 애플리케이션.
+
+![producer_consumer](https://github.com/user-attachments/assets/7861b220-83e1-4af0-8c01-995fc224c09a)
+
 
 ---
 **Reference**<br>
