@@ -132,6 +132,29 @@ class Point extends Discount { }
 - `type`
   - getType, newType을 간결하게 사용할 때  
 
+## Lombok staticName
+Lombok의 Constructor 어노테이션에 staticName을 지정하여 정적 팩토리 메서드를 생성할 수 있다.
+```java
+@RequiredArgsConstructor(staticName = "of")
+public class Member {
+    private final String name;
+    private final Integer age;
+    
+    /*
+    // 생성자를 private로 생성한다.
+    private Member(String name, Integer age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    // 생성자를 감싸고 있는 정적 팩토리 메서드가 추가된다. 
+    public static Member of(String name, Integer age) {
+        return new Member(name, age);
+    }
+    */
+}
+```
+
 ---
 **Reference**<br>
 - https://johngrib.github.io/wiki/pattern/static-factory-method
