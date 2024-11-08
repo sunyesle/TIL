@@ -89,6 +89,59 @@ IntStream.range(1, 5).parallel();
 IntStream.range(1, 5).parallel().sequential();
 ```
 
+## 스트림 가공
+### Filtering
+`filter`는 스트림 내 요소를 평가해서 걸러내준다.
+```java
+Stream<T> filter(Predicate<? super T> predicate);
+```
+
+```java
+List<String> names = Arrays.asList("Eric", "Elena", "Java");
+Stream<String> stream = names.stream()
+        .filter(name -> name.contains("a"));
+// [Elena, Java]
+```
+### Mapping
+`map`은 스트림 내 요소들을 하나씩 특정 값으로 변환해 준다.
+```java
+<R> Stream<R> map(Function<? super T, ? extends R> mapper);
+```
+
+```java
+List<String> names = Arrays.asList("Eric", "Elena", "Java");
+Stream<String> stream = names.stream()
+        .map(String::toUpperCase);
+// [ERIC, ELENA, JAVA]
+```
+
+`flatMap`은 중첩 구조를 한단계 제거하고 단일 컬렉션으로 만들어준다.<br>
+Stream을 반환하는 람다를 인자로 받는다.
+
+다음과 같이 중첩된 리스트가 있다. flatMap을 사용해서 중첩 구조를 제거할 수 있다.
+```java
+List<List<String>> list =
+        Arrays.asList(Arrays.asList("a", "b", "c"),
+                      Arrays.asList("d", "e", "f"));
+
+List<String> flatList = list.stream()
+        .flatMap(Collection::stream)
+        .toList();
+// [a, b, c, d, e, f]
+```
+
+다음 예제에서는 학생들의 점수 평균을 구한다.
+```java
+List<Student> students = Arrays.asList(
+        new Student(95, 73, 82),
+        new Student(80, 55, 96),
+        new Student(64, 95, 90));
+
+students.stream()
+        .flatMapToInt(student -> IntStream.of(student.getKor(), student.getEng(), student.getMath()))
+        .average().ifPresent(avg -> System.out.println(avg));
+```
+
 ---
 **Reference**<br>
 - https://futurecreator.github.io/2018/08/26/java-8-streams
