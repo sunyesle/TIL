@@ -5,9 +5,30 @@ Java의 Stream API는 일련의 데이터 흐름을 함수형 연산(람다)을 
 스트림은 "**생성 -> 가공 -> 결과 생성**"의 구조로 구성되어 있다.
 
 ## 목차
-- **[스트림 생성](#스트림-생성)**
-- **[스트림 가공](#스트림-가공)**
-- **[결과 생성](#결과-생성)**
+1. **[스트림 생성](#스트림-생성)**
+   - [배열 스트림](#배열-스트림)
+   - [컬렉션 스트림](#컬렉션-스트림)
+   - [비어있는 스트림](#비어있는-스트림)
+   - [Stream.builder()](#streambuilder)
+   - [Stream.generate()](#streamgenerate)
+   - [기본 타입형 스트림](#기본-타입형-스트림)
+   - [문자열 스트림](#문자열-스트림)
+   - [파일 스트림](#파일-스트림)
+   - [스트림 연결하기](#스트림-연결하기)
+   - [병렬 스트림](#병렬-스트림)
+
+2. **[스트림 가공](#스트림-가공)**
+   - [Filtering](#filtering)
+   - [Mapping](#mapping)
+   - [Sorting](#sorting)
+   - [Iterating](#iterating)
+
+3. **[결과 생성](#결과-생성)**
+   - [Calculating](#calculating)
+   - [Reduction](#reduction)
+   - [Collecting](#collecting)
+   - [Matching](#matching)
+   - [Iterating](#iterating)
 
 ## 스트림 생성
 
