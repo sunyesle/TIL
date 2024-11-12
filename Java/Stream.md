@@ -28,7 +28,7 @@ Java의 Stream API는 일련의 데이터 흐름을 함수형 연산(람다)을 
    - [Reduction](#reduction)
    - [Collecting](#collecting)
    - [Matching](#matching)
-   - [Iterating](#iterating)
+   - [Iterating](#iterating-1)
 
 ## 스트림 생성
 
