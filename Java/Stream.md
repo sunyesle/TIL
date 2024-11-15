@@ -19,6 +19,7 @@ Java의 Stream API는 일련의 데이터 흐름을 함수형 연산(람다)을 
 
 2. **[스트림 가공](#스트림-가공)**
    - [Filtering](#filtering)
+   - [Slicing](#slicing)
    - [Mapping](#mapping)
    - [Sorting](#sorting)
    - [Iterating](#iterating)
@@ -128,6 +129,43 @@ Stream<String> stream = names.stream()
         .filter(name -> name.contains("a"));
 // [Elena, Java]
 ```
+
+`distinct`는 스트림 내 중복 요소를 제거해 준다.
+```java
+Arrays.asList("A", "B", "B", "A", "C").stream()
+        .distinct();
+// [A, B, C]
+```
+
+### Slicing
+`takeWhile`은 Predicate가 false를 반환할 때까지의 요소를 취한다.
+```java
+IntStream.of(1, 3, 5, 7, 9)
+        .takeWhile(i -> i < 5);
+// [1, 3]
+```
+
+`dropWhile`은 Predicate가 false를 반환할 때까지의 요소를 모두 버리고 나머지 요소를 반환한다.
+```java
+IntStream.of(1, 3, 5, 7, 9)
+        .dropWhile(i -> i < 5);
+// [5, 7, 9]
+```
+
+`limit`은 요소 수를 최대 n개로 제한한다.
+```java
+IntStream.of(1, 3, 5, 7, 9)
+        .limit(2);
+// [1, 3]
+```
+
+`skip`은 처음 n개의 요소를 제외한다.
+```java
+IntStream.of(1, 3, 5, 7, 9)
+        .skip(2);
+// [5, 7, 9]
+```
+
 ### Mapping
 `map`은 스트림 내 요소들을 하나씩 특정 값으로 변환해 준다.
 ```java
