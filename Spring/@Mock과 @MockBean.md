@@ -24,8 +24,8 @@ class MemberServiceMockTest {
     @Test
     void test() throws JsonProcessingException {
         Member member = new Member(1L, "김이름");
-        when(memberRepository.findById(1L)).thenReturn(member);
-        when(objectMapper.writeValueAsString(any())).thenReturn(new ObjectMapper().writeValueAsString(member));
+        given(memberRepository.findById(1L)).willReturn(member);
+        given(objectMapper.writeValueAsString(any())).willReturn(new ObjectMapper().writeValueAsString(member));
 
         String memberString = memberService.getMember(1L);
 
@@ -53,7 +53,7 @@ class MemberServiceMockBeanTest {
     @Test
     void test() throws JsonProcessingException {
         Member member = new Member(1L, "김이름");
-        when(memberRepository.findById(1L)).thenReturn(member);
+        given(memberRepository.findById(1L)).willReturn(member);
 
         String memberString = memberService.getMember(1L);
 
