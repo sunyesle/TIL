@@ -4,6 +4,42 @@ Java의 Stream API는 일련의 데이터 흐름을 함수형 연산(람다)을 
 
 스트림은 "**생성 -> 가공 -> 결과 생성**"의 구조로 구성되어 있다.
 
+### 가독성 향상
+스트림을 사용하면 람다식과 메서드 체이닝을 통해 데이터 처리 흐름을 명확하게 표현할 수 있다.
+
+간단한 예를 통해 기존방식과 스트림을 이용한 방식을 비교해 보자.<br>
+예제는 다음과 같다.<br>
+- 단어의 길이가 4 이상인 경우만 필터링한다.
+- 필터링된 단어를 오름차순으로 정렬한다.
+- 결과를 출력한다.
+
+**기존 방식**<br>
+```java
+List<String> words = Arrays.asList("apple", "bat", "zebra", "cat", "elephant", "dog", "ant");
+
+List<String> result = new ArrayList<>();
+for (String word : words) {
+    if (word.length() >= 4) {
+        result.add(word);
+    }
+}
+Collections.sort(result);
+for (String word : result) {
+    System.out.println(word);
+}
+```
+
+**스트림을 이용한 방식**<br>
+```java
+List<String> words = Arrays.asList("apple", "bat", "zebra", "cat", "elephant", "dog", "ant");
+
+words.stream()
+        .filter(word -> word.length() >= 4)
+        .sorted()
+        .forEach(System.out::println);
+}
+```
+
 ## 목차
 1. **[스트림 생성](#스트림-생성)**
    - [배열 스트림](#배열-스트림)
