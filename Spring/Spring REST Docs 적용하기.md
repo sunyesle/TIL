@@ -1,4 +1,8 @@
-# Spring REST Docs
+# Spring REST Docs 적용하기
+
+Spring REST Docs는 테스트 코드 기반으로 RESTful 문서 생성을 도와주는 도구이다.<br>
+테스트 코드를 기반으로 생성된 Asciidoc 스니펫을 조합하여 Acsciidoctor로 문서를 작성할 수 있다.<br>
+Swagger와 달리 운영 코드에 침투적이지 않고, 테스트를 통과해야 문서가 만들어지기 때문에 신뢰성이 높다는 장점이 있다.
 
 ## build.gradle
 ```gradle
@@ -91,7 +95,7 @@ public abstract class BaseRestDocsTest {
 }
 ```
 
-베이스 클래스를 상속받아 테스트 코드를 작성한다.
+위에서 작성한 `BaseRestDocsTest` 클래스를 상속받아 테스트 코드를 작성한다.
 ```java
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -132,9 +136,84 @@ class BoardDocsTest extends BaseRestDocsTest {
 }
 ```
 
+테스트 코드를 작성한 뒤 **restDocsTest** 태스크를 실행하면 `build/generated-snippets` 경로에 스니펫이 생성된 것을 확인할 수 있다.
+
+![Spring-REST-Docs_1](https://github.com/user-attachments/assets/8659521f-b01a-4780-b390-eee728c72e0b)
+
+
+## Snippet 커스텀
+기본적으로 템플릿을 제공하지만, 필요하다면 출력되는 템플릿을 커스텀할 수 있다.<br>
+`src/test/resources/org/springframework/restdocs/templates` 경로에 커스텀할 스니펫의 템플릿 파일을 정의하면 된다.
+
+![Spring-REST-Docs_6](https://github.com/user-attachments/assets/5a7e0b11-3810-485a-b017-d82e1f2360b1)
+
+> response-fields.snippet
+```snippet
+.Response Fields
+|===
+|필드명|타입|필수값|설명
+
+{{#fields}}
+|{{path}}
+|{{type}}
+|{{^optional}}true{{/optional}}
+a|{{description}}
+{{/fields}}
+|===
+```
+
+- [공식 문서](https://docs.spring.io/spring-restdocs/docs/current/reference/htmlsingle/#documenting-your-api-customizing-snippets)
+- [기본 템플릿 참고](https://github.com/spring-projects/spring-restdocs/tree/main/spring-restdocs-core/src/main/resources/org/springframework/restdocs/templates/asciidoctor)
+
+## 문서 작성
+문서 작성에 앞서 adoc 파일 작성의 편의를 위해 Intellij AsciiDoc 플러그인을 설치한다.
+
+![Spring-REST-Docs_2](https://github.com/user-attachments/assets/99dcae03-c1c6-4c4f-916d-4be9c2ed4b7a)
+
+생성된 스니펫 조각들을 이용해 문서를 작성해 보자.
+
+`src/docs/asciidoc` 경로에 index.adoc 파일을 생성한다.<br>
+API마다 adoc 파일을 분리하고, index.adoc에서 해당 파일들을 include 하였다.
+
+> index.adoc
+```asciidoc
+= API Documentation
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 2
+:sectlinks:
+:sectnums:
+:docinfo: shared-head
+
+== Board API
+include::api/board.adoc[]
+```
+
+> board.adoc
+```asciidoc
+=== 게시글 상세 조회
+
+.request
+include::{snippets}/get-board/http-request.adoc[]
+include::{snippets}/get-board/path-parameters.adoc[]
+
+.response
+include::{snippets}/get-board/http-response.adoc[]
+include::{snippets}/get-board/response-fields.adoc[]
+```
+**asciidoctor** 태스크를 실행하면 `build/docs` 경로에 html 파일이 생성된다.
+
+![Spring-REST-Docs_3](https://github.com/user-attachments/assets/e354d828-0767-4870-80e0-0aa4e0d7e326)
+
+## 문서를 정적 리소스로 제공
+생성된 문서를 정적 콘텐츠로 제공하려면 **copyDocument** 태스크를 실행하여 html 파일을 정적 리소스 폴더에 복사한다.
+
+![Spring-REST-Docs_4](https://github.com/user-attachments/assets/8fa60ccd-609c-4a3f-82bb-d24c5084fe64)
+
 ---
 **Reference**<br>
 - https://docs.spring.io/spring-restdocs/docs/current/reference/htmlsingle
 - https://backtony.tistory.com/37
 - https://dukcode.github.io/spring/spring-rest-docs/
-
