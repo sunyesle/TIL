@@ -115,7 +115,7 @@ tasks.register('copyOasToSwagger', Copy) {
 
 ## 테스트 코드 작성
 REST Docs 문서 생성에는 `org.springframework.restdocs.mockmvc.MockMvcRestDocumentation`을 사용하고,
-Swagger 문서생 성에는 `com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper`를 사용한다.
+Swagger 문서 생성에는 `com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper`를 사용한다.
 ```java
 import static com.epages.restdocs.apispec.ResourceDocumentation.resource;
 import static org.mockito.ArgumentMatchers.any;
