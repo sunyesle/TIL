@@ -171,6 +171,67 @@ doThrow = true 일때: java.lang.IllegalArgumentException: Invalid Argument
 doThrow = false 일떄: success
 ```
 
+## Java 9 CompletableFuture 개선 사항
+Java 9부터 `CompletableFuture`에 지연 및 시간 초과를 지원하는 메서드가 추가되었다.
+
+### 시간 초과
+- `orTimeout`: 지정된 시간 내에 완료되지 않으면 `TimeoutException`을 발생시켜 `CompletableFuture`를 예외적으로 완료한다.
+- `completeOnTimeout`: 지정된 시간 내에 완료되지 않으면 기본값을 반환한다.
+```java
+@Test
+void testTimeout() {
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                return "hello";
+            })
+            .orTimeout(1, TimeUnit.SECONDS)
+            .whenComplete((result, e) -> {
+                if (e == null){
+                    System.out.println(result);
+                }else{
+                    e.printStackTrace();
+                }
+            });
+
+    assertThrows(ExecutionException.class, future::get);
+}
+```
+```java
+@Test
+void testComplateOnTimeout() {
+    CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+                try {
+                    Thread.sleep(1500);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                return "hello";
+            })
+            .completeOnTimeout("timeout", 1, TimeUnit.SECONDS)
+            .thenAccept(result -> System.out.println(result));
+
+    assertThrows(ExecutionException.class, future::get);
+}
+```
+
+### 실행 지연
+- `delayedExecutor`: 지정된 지연 후에 작업을 실행하는 `Executor`를 반환한다.
+```java
+@Test
+void testDelay() throws ExecutionException, InterruptedException {
+    long start = System.nanoTime();
+    CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> "hello", CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS))
+            .thenAccept(System.out::println);
+
+    future.get();
+    System.out.println("duration: " + TimeUnit.SECONDS.convert(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+}
+```
+
 ---
 **Reference**<br>
 - https://devidea.tistory.com/59
