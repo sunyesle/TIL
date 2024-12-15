@@ -151,7 +151,7 @@ start task: Sun Dec 15 23:15:35 KST 2024
 ```
 
 ## Executors
-스레드 풀을 손쉽게 생성할 수 있는 팩토리 메서드를 제공한다.
+`Executors` 클래스는 스레드 풀을 손쉽게 생성할 수 있는 팩토리 메서드를 제공한다.
 - `newFixedThreadPool`: 고정된 크기의 스레드 풀을 생성한다.
 - `newCachedThreadPool`: 필요에 따라 새 스레드를 만드는 스레드 풀을 생성한다.
 - `newScheduledThreadPool`: 일정 시간 뒤 혹은 주기적으로 실행되어야 하는 작업을 위한, 고정된 크기의 스레드 풀을 생성한다.
@@ -163,3 +163,4 @@ start task: Sun Dec 15 23:15:35 KST 2024
 - https://yangbox.tistory.com/28
 - https://brunch.co.kr/@mystoryg/37
 - https://jizard.tistory.com/569
+- https://docs.oracle.com/javase/9/docs/api/java/util/concurrent/ScheduledThreadPoolExecutor.html
