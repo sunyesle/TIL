@@ -125,14 +125,45 @@ Map<String, String> params = new HashMap<>();
 given().body(params)
 ```
 
----
-**Reference**<br>
-- https://github.com/rest-assured/rest-assured/wiki/Usage
-
-
 ```java
 RequestDTO request = new RequestDto(1, "value1");
 
 given().body(request)
 ```
 
+
+## 기본값
+```java
+RestAssured.baseURI = "http://myhost.org";
+RestAssured.port = 80;
+RestAssured.basePath = "/resource";
+RestAssured.authentication = basic("username", "password");
+RestAssured.rootPath = "x.y.z";
+RestAssured.filters(..);
+```
+
+## 필터
+`io.restassured.filter.Filter` 인터페이스를 구현해야한다.
+```java
+given().filter(new MyFilter()). ..
+```
+
+REST Assured에서 제공하는 몇 가지 필터는 바로 사용할 수 있다.
+- `io.restassured.filter.log.RequestLoggingFilter`: 요청 로깅 필터
+- `io.restassured.filter.log.ResponseLoggingFilter`: 응답 로깅 필터
+- `io.restassured.filter.log.ErrorLoggingFilter`: 오류 응답 로깅 필터(상태 코드 400~500)
+
+## 로깅
+```java
+given().log().all(). .. // Log all request specification details including parameters, headers and body
+given().log().params(). .. // Log only the parameters of the request
+given().log().body(). .. // Log only the request body
+given().log().headers(). .. // Log only the request headers
+given().log().cookies(). .. // Log only the request cookies
+given().log().method(). .. // Log only the request method
+given().log().path(). .. // Log only the request path
+```
+
+---
+**Reference**<br>
+- https://github.com/rest-assured/rest-assured/wiki/Usage
