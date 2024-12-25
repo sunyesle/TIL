@@ -15,10 +15,20 @@ public abstract class BaseAcceptanceTest {
     @LocalServerPort
     private int port;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @BeforeEach
     public void setUp() {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = port;
+
+	// 로깅 필터 추가
+        RestAssured.filters(new RequestLoggingFilter(), new ResponseLoggingFilter());
+
+        // Object Mapper 설정
+        RestAssured.config = RestAssured.config()
+                .objectMapperConfig(new ObjectMapperConfig().jackson2ObjectMapperFactory((cls, charset) -> objectMapper));
     }
 }
 ```
