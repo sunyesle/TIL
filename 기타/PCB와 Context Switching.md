@@ -35,6 +35,23 @@ Context Switching은 동작 중인 프로세스의 context를 PCB에 보관하�
 
 ![context_switch](https://github.com/user-attachments/assets/1c9bc38f-4fd2-42b4-8e4e-e612a316b400)
 
+## Context Switching 오버헤드
+Context Switching이 너무 잦아지면 오버헤드가 발생해 성능이 떨어질 수 있다.
+
+**캐시 무효화**<br>
+Context Switching 발생 시 cache memory flush가 이뤄진다.<br>
+기존 프로세스의 캐시 데이터는 무효화되고 새로운 프로세스의 데이터가 캐시에 로드된다.<br>
+이로 인해 캐시 미스가 발생하며, 메모리에서 CPU로 데이터를 가져와야 하므로 메모리 접근 시간이 증가하게 돼서 성능 저하가 발생할 수 있다.
+
+**스케줄러 오버헤드**<br>
+운영체제의 스케줄러가 어떤 프로세스를 실행할지 결정하는데 소요되는 시간과 자원도 오버헤드에 포함된다.
+
+**레지스터 저장 및 복원**<br>
+현재 실행 중인 프로세스의 레지스터 상태를 저장하고 새로 실행될 프로세스의 레지스터 상태를 복원하는 작업이 필요하다.
+
+**메모리 관리 오버헤드**<br>
+새로운 프로세스의 페이지 테이블과 관련된 작업이 필요하다.
+
 ---
 **Reference**<br>
 - https://gyoogle.dev/blog/computer-science/operating-system/PCB%20&%20Context%20Switching.html
