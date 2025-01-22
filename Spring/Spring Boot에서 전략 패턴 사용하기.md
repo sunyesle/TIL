@@ -12,6 +12,11 @@ public enum MessageType {
     SMS, EMAIL
 }
 ```
+```java
+public abstract class Message {
+    // 공통 속성 정의
+}
+```
 
 ### Strategy 구현체
 **EmailSender**<br>
