@@ -10,8 +10,8 @@ MMU는 CPU와 메모리 사이에 위치하여 가상 메모리 주소와 물리
 
 (**p**: 페이지 번호, **f**: 프레임 번호, **d**: offset)
 
-- virtual address를 page size로 나누면 몫은 page number, 나머지는 offset이 된다.
-- page table에서 page number를 통해서 frame number를 찾아낸다.
+- 가상 주소를 page size로 나누면 몫은 page number, 나머지는 offset이 된다.
+- 페이지 테이블에서 page number를 통해서 frame number를 찾아낸다.
 - frame number에 frame size(=page size)를 곱하면 해당 프레임의 시작 주소를 얻을 수 있으며, 여기에 offset의 값을 더해주면 물리 주소를 구할 수 있다.
 
 대부분의 컴퓨터는 페이지 테이블을 메인 메모리에 저장하고 **페이지 테이블 기준 레지스터**(**PTBR, Page-Table Base Register**)가 페이지 테이블을 가리키도록 한다.
