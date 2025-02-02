@@ -25,6 +25,79 @@ OSI 7계층을 간소화해서 4계층으로 표현한다.
 이미지 오른쪽의 TCP/IP 모델은 **TCP/IP Updated 모델**이다.<br>
 Link 계층을 두 레이어로 세분화하고, Internet 계층의 명칭을 Network로 변경하였다.
 
+## TCP/IP 5계층
+| Layer Number | Layer Name  | Addressing  | Protocol Data Unit | Protocol                  |
+|--------------|-------------|-------------|--------------------|---------------------------|
+| L5           | Application | -           | Message            | HTTP, SSH, FTP, SMTP, POP |
+| L4           | Transport   | Port Number | Segment, Datagram  | TCP, UDP                  |
+| L3           | Network     | IP Address  | Packet             | IP                        |
+| L2           | Data-Link   | MAC Address | Frame              | IEEE 802, Ethernet, Wi-Fi |
+| L1           | Physical    | -           | Bit, Signal        | -                         |
+
+### L5 | Application
+- 프로그램 구현체와 사용자 인터페이스를 의미한다.
+- OS에서 제공하는 L4 API를 활용해 통신 프로그램이 구현된다.
+- HTTP, SSH, FTP, SMTP, POP 등 다양한 프로토콜이 활용된다.
+
+### L4 | Transport
+> process-to-process delivery
+- port 번호를 사용하여 최종 도착지인 프로세스까지 데이터를 전달한다.
+- OS 커널에 구현되어 있다.
+- 패킷 전송 프로토콜로는 TCP와 UDP가 있다.
+
+#### TCP, UDP
+|          | TCP                                           | UDP                                        |
+|----------|-----------------------------------------------|--------------------------------------------|
+| 의미       | 전송 제어 프로토콜<br>(Transmission Control Protocol) | 사용자 데이터그램 프로토콜<br>(User Datagram Protocol) |
+| 연결 방식    | 연결형 서비스                                       | 비연결형 서비스                                   |
+| 패킷 교환 방식 | 가상 회선 방식                                      | 데이터그램 방식                                   |
+| 데이터 단위   | 세그먼트                                          | 데이터그램                                      |
+| 전송 순서    | 전송 순서 보장                                      | 전송 순서가 바뀔 수 있음                             |
+| 수신 여부 확인 | 수신 여부 확인                                      | 수신 여부 확인하지 않음                              |
+| 장점       | 신뢰성 보장                                        | 빠르다                                        |
+| 활용       | 대부분의 애플리케이션                                   | 게임, 스트리밍 등 실시간 속도가 중요한 애플리케이션              |
+
+#### Port Number
+- 컴퓨터는 2byte 길이의 port 번호를 가진다.
+- 잘 알려진 포트(well-known port)인 0번~1023번 포트는 OS와 주요 프로토콜에서 사용하기 때문에, 사용자 애플리케이션은 그 외의 port 번호를 사용한다.
+
+### L3 | Network
+> host-to-host delivery
+- Routing & Forwarding을 수행해서 목적지 IP 주소까지 패킷을 전달한다.
+- OS 커널에 구현되어 있다.
+- URL이 주어지면 DNS(Domain Name Resolution)를 통해 IP 주소를 찾고, 실제 패킷은 IP 주소를 향해 전송된다.
+- 패킷이 Host에 도작하면 IP 주소의 광역대에 따라 Routing Table에 지정된 경로로 패킷을 Forwarding한다.
+
+#### IP Address
+- Internet Protocol Address
+- Host의 논리적 주소로, 전 세계의 네트워크상에서 유일하다.
+- IPv4는 4byte, IPv6는 8byte 주소를 갖는다.
+
+### L2 | Data-Link
+> 1-hop delivery
+- Routing & Forwarding을 수행해서 목적지 IP 주소까지 패킷을 전달한다.
+- 인접 노드들 간의 신뢰할 수 있는 전달이다.
+- Ethernet Card에 구현되어 있다.
+
+#### 홉(Hop)
+- 홉이란 컴퓨터 네트워크에서 출발지와 목적지 사이에 위치한 경로의 한 부분을 발한다.
+- 1 hop은 네트워크에서 한 번의 이동을 의미한다. 예를 들어 한 라우터에서 다음 라우터로 데이터를 전송할 때 그 경로가 1 hop이다.
+
+#### MAC Address
+- Media Access Control Address
+- Ethernet Card의 물리적 주소로 로컬 네트워크 안에서만 유일하다.
+- Gateway(라우터)는 Ethernet Card를 2개 가지고 있어서 LAN과 WAN을 연결한다.
+- 48 bit 주소를 갖는다.
+
+#### ARP
+- Address Resolution Protocol
+- LAN 내부의 ARP Table을 참조하여 IP 주소를 MAC 주소로 변환한다.
+
+### L1 | Physical
+- Encoding: 0과 1의 나열을 아날로그 신호로 변환해서 전송한다.
+- Decoding: 아날로그 신호를 받으면 0과 1로 해석한다.
+- 물리적, 기계적, 전기적 기능으로 HW에 구현되어 있다.
+
 ---
 **Reference**<br>
 - https://velog.io/@jwkim/cs-nw-osi-tcp-ip
