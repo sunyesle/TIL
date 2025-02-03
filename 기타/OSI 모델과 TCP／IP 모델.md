@@ -3,7 +3,7 @@
 ![Image](https://github.com/user-attachments/assets/5fa2e69a-47ca-4051-bb57-f342c80e3b08)
 
 ## OSI 7계층 모델
-**OSI 7계층 모델**은 국제표준화기구(ISO)에서 개발한 네트워크 모델이다.<br>
+국제표준화기구(ISO)에서 개발한 네트워크 모델이다.<br>
 네트워크 통신 기능을 7개의 계층으로 나누고, 각 계층의 역할과 표준을 정하였다.
 
 | 계층  | 이름                        | 설명                               |
@@ -41,7 +41,7 @@ Link 계층을 두 레이어로 세분화하고, Internet 계층의 명칭을 Ne
 
 ### L4 | Transport
 > process-to-process delivery
-- port 번호를 사용하여 최종 도착지인 프로세스까지 데이터를 전달한다.
+- 포트 번호를 사용하여 최종 도착지인 프로세스까지 데이터를 전달한다.
 - OS 커널에 구현되어 있다.
 - 패킷 전송 프로토콜로는 TCP와 UDP가 있다.
 
@@ -57,46 +57,43 @@ Link 계층을 두 레이어로 세분화하고, Internet 계층의 명칭을 Ne
 | 장점       | 신뢰성 보장                                        | 빠르다                                        |
 | 활용       | 대부분의 애플리케이션                                   | 게임, 스트리밍 등 실시간 속도가 중요한 애플리케이션              |
 
-#### Port Number
-- 컴퓨터는 2byte 길이의 port 번호를 가진다.
-- 잘 알려진 포트(well-known port)인 0번~1023번 포트는 OS와 주요 프로토콜에서 사용하기 때문에, 사용자 애플리케이션은 그 외의 port 번호를 사용한다.
+#### 포트 번호(Port Number)
+- 컴퓨터는 2byte 길이의 포트 번호를 가진다.
+- 잘 알려진 포트(well-known port)인 0번~1023번 포트는 OS와 주요 프로토콜에서 사용하기 때문에, 사용자 애플리케이션은 그 외의 포트 번호를 사용한다.
 
 ### L3 | Network
 > host-to-host delivery
-- Routing & Forwarding을 수행해서 목적지 IP 주소까지 패킷을 전달한다.
+- 라우팅(Routing)과 포워딩(Forwarding)을 수행해서 목적지 IP 주소까지 패킷을 전달한다.
 - OS 커널에 구현되어 있다.
 - URL이 주어지면 DNS(Domain Name Resolution)를 통해 IP 주소를 찾고, 실제 패킷은 IP 주소를 향해 전송된다.
-- 패킷이 Host에 도작하면 IP 주소의 광역대에 따라 Routing Table에 지정된 경로로 패킷을 Forwarding한다.
+- 패킷이 호스트에 도작하면 IP 주소의 광역대에 따라 라우팅 테이블(Routing Table)에 지정된 경로로 패킷을 포워딩한다.
 
-#### IP Address
-- Internet Protocol Address
+#### IP Address(Internet Protocol Address)
 - Host의 논리적 주소로, 전 세계의 네트워크상에서 유일하다.
 - IPv4는 4byte, IPv6는 8byte 주소를 갖는다.
 
 ### L2 | Data-Link
 > 1-hop delivery
-- Routing & Forwarding을 수행해서 목적지 IP 주소까지 패킷을 전달한다.
+- 라우팅과 포워딩을 수행해서 목적지 MAC 주소까지 프레임을 전달한다.
 - 인접 노드들 간의 신뢰할 수 있는 전달이다.
 - Ethernet Card에 구현되어 있다.
 
 #### 홉(Hop)
-- 홉이란 컴퓨터 네트워크에서 출발지와 목적지 사이에 위치한 경로의 한 부분을 발한다.
+- 홉은 컴퓨터 네트워크에서 출발지와 목적지 사이에 위치한 경로의 한 부분이다.
 - 1 hop은 네트워크에서 한 번의 이동을 의미한다. 예를 들어 한 라우터에서 다음 라우터로 데이터를 전송할 때 그 경로가 1 hop이다.
 
-#### MAC Address
-- Media Access Control Address
+#### MAC Address(Media Access Control Address)
 - Ethernet Card의 물리적 주소로 로컬 네트워크 안에서만 유일하다.
 - Gateway(라우터)는 Ethernet Card를 2개 가지고 있어서 LAN과 WAN을 연결한다.
 - 48 bit 주소를 갖는다.
 
-#### ARP
-- Address Resolution Protocol
+#### ARP(Address Resolution Protocol)
 - LAN 내부의 ARP Table을 참조하여 IP 주소를 MAC 주소로 변환한다.
 
 ### L1 | Physical
 - Encoding: 0과 1의 나열을 아날로그 신호로 변환해서 전송한다.
 - Decoding: 아날로그 신호를 받으면 0과 1로 해석한다.
-- 물리적, 기계적, 전기적 기능으로 HW에 구현되어 있다.
+- 물리적, 기계적, 전기적 기능으로 하드웨어에 구현되어 있다.
 
 ---
 **Reference**<br>
