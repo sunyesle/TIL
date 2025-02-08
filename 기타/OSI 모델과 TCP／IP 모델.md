@@ -69,7 +69,7 @@ Link 계층을 두 레이어로 세분화하고, Internet 계층의 명칭을 Ne
 - 패킷이 호스트에 도작하면 IP 주소의 광역대에 따라 라우팅 테이블(Routing Table)에 지정된 경로로 패킷을 포워딩한다.
 
 #### IP Address(Internet Protocol Address)
-- Host의 논리적 주소로, 전 세계의 네트워크상에서 유일하다.
+- Host의 **논리적 주소**로, 전 세계의 네트워크상에서 유일하다.
 - IPv4는 4byte, IPv6는 8byte 주소를 갖는다.
 
 ### L2 | Data-Link
@@ -83,12 +83,13 @@ Link 계층을 두 레이어로 세분화하고, Internet 계층의 명칭을 Ne
 - 1 hop은 네트워크에서 한 번의 이동을 의미한다. 예를 들어 한 라우터에서 다음 라우터로 데이터를 전송할 때 그 경로가 1 hop이다.
 
 #### MAC Address(Media Access Control Address)
-- Ethernet Card의 물리적 주소로 로컬 네트워크 안에서만 유일하다.
-- Gateway(라우터)는 Ethernet Card를 2개 가지고 있어서 LAN과 WAN을 연결한다.
+- Ethernet Card의 **물리적 주소**로 로컬 네트워크 안에서만 유일하다.
 - 48 bit 주소를 갖는다.
+- Gateway(라우터)는 Ethernet Card를 2개 가지고 있어서 LAN과 WAN을 연결한다.
 
 #### ARP(Address Resolution Protocol)
-- LAN 내부의 ARP Table을 참조하여 IP 주소를 MAC 주소로 변환한다.
+- IP 주소를 MAC 주소와 매칭시키기 위한 프로토콜이다.
+- 호스트는 ARP를 사용하여 IP 주소에 대응하는 MAC 주소를 조회하고, 조회한 정보를 ARP Table에 저장하여 이후 통신이 이루어질 때 참고한다.
 
 ### L1 | Physical
 - Encoding: 0과 1의 나열을 아날로그 신호로 변환해서 전송한다.
