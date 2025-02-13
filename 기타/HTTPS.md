@@ -57,6 +57,16 @@ HTTPS에서 암호화와 복호화 작업을 위해서는 키가 필요하다.
 
 **파란색**은 TCP layer의 **3-way handshake**로 HTTPS가 TCP기반의 프로토콜이기 때문에 암호화 협상(SSL handshake)에 앞서 연결을 생성하기 위해 실시하는 과정이고, **노란색**이 **SSL handshake**이다.
 
+SSL handshake는 다음과 같은 순서로 진행된다.
+- `Client`: 암호화 알고리즘 나열 및 전달
+- `Server Hello`: 암호화 알고리즘 선택
+- `Certificate`: 인증서 전달
+- `Client Key Exchange`: 데이터를 암호화할 대칭키 전달
+- `Change Cipher Spec`: 정보 전달 완료
+- `Finished`: SSL handshake 종료
+
+각 패킷들에 대해 자세히 알아보자.
+
 ### Client Hello
 Client가 Server에 연결을 시도하며 전송하는 패킷이다. 자신이 사용 가능한 Cipher Suite 목록, Session ID, SSL Protocol Version, Random byte 등을 전달한다.
 
