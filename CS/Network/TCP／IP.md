@@ -59,6 +59,43 @@ IP routing을 하면 그 결과물로 next hop IP와 해당 IP로 패킷 전송�
 
 NIC가 패킷을 전송할 때 NIC는 호스트 CPU에 인터럽트를 발생시킨다. 운영체제가 핸들러를 호출하고, 핸들러는 전송된 패킷을 운영체제에 반환한다.
 
+
+### 데이터 수신 시
+![데이터 수신](https://github.com/user-attachments/assets/3e52af34-ec40-4275-b58b-ac1e9775a1bf)
+#### NIC
+NIC가 패킷을 자신의 메모리에 기록한다.
+패킷이 올바른지 검사하고, 호스트의 메모리 버퍼로 전송한다. 이후, 패킷 전송이 완료되면 운영체제에 인터럽트를 발생시킨다.
+
+#### Driver
+드라이버가 상위 레이어로 패킷을 전달하려면 운영체제가 이해할 수 있도록, 받은 패킷을 운영체제가 사용하는 패킷 구조체로 포장해야 한다.
+드라이버는 포장한 패킷을 상위 레이어로 전달한다.
+
+#### Ethernet
+패킷이 올바른지 검사한다.
+
+Ethernet 헤더의 ethertype 값을 보고 상위 프로토콜(네트워크 프로토콜)을 찾는다. IPv4 ethertype 값은 0x0800이다.
+
+Ethernet 헤더를 제거하고 IP 레이어로 패킷을 전달한다.
+
+#### IP
+패킷이 올바른지 검사한다.
+
+IP 라우팅을 해서 패킷을 로컬 장비가 처리해야 하는지, 아니면 다른 장비로 전달해야 하는지 판단한다.
+로컬 장비가 처리해야 하는 패킷이라면 IP 헤더의 protocol 값을 보고 상위 프로토콜(트랜스포트 프로토콜)을 찾는다. TCP protocol 값은 6이다.
+
+IP 헤더를 제거하고 TCP 레이어로 패킷을 전달한다.
+
+#### TCP
+패킷이 올바른지 검사한다.
+
+패킷이 속하는 연결, 즉 TCB를 찾는다. 이때 `소스 IP, 소스 port, 타깃 IP, 타깃 port`를 식별자로 사용한다.
+연결을 찾으면 프로토콜을 수행해서 받은 패킷을 처리한다. 새로운 데이터를 받았다면 receive socket buffer에 추가한다. TCP 상태에 따라 새로운 패킷(ex. ACK 패킷)을 전송할 수 있다.
+
+여기까지 해서 TCP/IP 수신 패킷 처리 과정이 끝나게 된다.
+
+이후 애플리케이션이 read 시스템 콜을 호출하면 커널 영역으로 전환되고, socket buffer에 있는 데이터를 유저 공간의 메모리로 복사해 간다. 복사한 데이터는 socket buffer에서 제거한다.
+그리고 TCP를 호출한다. TCP는 socket buffer에 새로운 공간이 생겼기 때문에 recieve window를 증가시킨다. 프로토콜 상태에 따라 패킷을 전송하고 패킷 전송이 없으면 시스템 콜이 종료된다.
+
 ## 흐름 제어(Flow Control)
 송신 측과 수신 측의 데이터 처리 속도 차이를 해결하기 위한 기법이다.
 
@@ -69,3 +106,5 @@ NIC가 패킷을 전송할 때 NIC는 호스트 CPU에 인터럽트를 발생시
 **Reference**<br>
 - https://aws-hyoh.tistory.com/57
 - https://better-together.tistory.com/110
+- https://d2.naver.com/helloworld/47667
+- http://www.ktword.co.kr/test/view/view.php?no=1899
