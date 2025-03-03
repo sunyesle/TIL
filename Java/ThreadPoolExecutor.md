@@ -1,6 +1,11 @@
 # ThreadPoolExecutor
 `ThreadPoolExecutor`는 Java에서 제공하는 Thread Pool 구현체이다.
 
+## 스레드 풀(Thread Pool)
+스레드 풀이란 스레드를 미리 생성하고, 작업 요청이 발생할 때마다 미리 생성된 스레드로 해당 작업을 처리하는 방식을 의미한다.
+
+스레드의 빈번한 생성 및 파괴로 인한 오버헤드를 줄일 수 있다.
+
 ## 동작 방식
 `ThreadPoolExecutor`는 내부의 `BlockingQueue`에 작업을 등록해 둔다.
 각각의 스레드는 작업을 할당받아 처리하고, 사용할 수 있는 스레드가 없다면 작업은 큐에서 대기하게 된다.
@@ -39,4 +44,6 @@ corePoolSize를 초과하여 생성된 스레드는 keepAliveSeconds 만큼 idle
 **Reference**<br>
 - https://blog.naver.com/bumsukoh/222175557879
 - https://velog.io/@vanillacake369/Async-Size-%EC%84%A4%EC%A0%95-%EA%B8%B0%EC%A4%80%EC%97%90-%EB%8C%80%ED%95%B4-%EA%B3%A0%EB%AF%BC%ED%95%B4%EB%B3%B4%EC%9E%90-feat.ThreadPoolQueue
+- https://hudi.blog/java-thread-pool/
+- https://tecoble.techcourse.co.kr/post/2021-09-18-java-thread-pool/
 
