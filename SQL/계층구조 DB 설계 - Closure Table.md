@@ -16,9 +16,7 @@ CREATE TABLE category_closure (
     ancestor_id   INT NOT NULL,
     descendant_id INT NOT NULL,
     depth         INT NOT NULL,
-    PRIMARY KEY (ancestor_id, descendant_id),
-    FOREIGN KEY (ancestor_id) REFERENCES category(id) ON DELETE CASCADE,
-    FOREIGN KEY (descendant_id) REFERENCES category(id) ON DELETE CASCADE
+    PRIMARY KEY (ancestor_id, descendant_id)
 );
 
 INSERT INTO category (id, name) VALUES
@@ -69,6 +67,40 @@ WHERE cc.descendant_id = 4;
 SELECT c.* from category c
 JOIN category_closure cc ON c.id = cc.descendant_id 
 WHERE cc.ancestor_id = 4;
+```
+
+**삽입**
+```sql
+INSERT INTO category (id, name)
+VALUES (8, '과일');
+
+INSERT INTO category_closure (ancestor_id, descendant_id, depth)
+SELECT ancestor_id , 8, depth + 1 
+FROM category_closure 
+WHERE descendant_id = 2 -- 부모 id
+UNION ALL
+SELECT 8, 8, 0
+;
+```
+
+**삭제**
+```sql
+DELETE FROM category
+WHERE id = 4 
+OR id IN (
+    SELECT descendant_id
+    FROM category_closure
+    WHERE ancestor_id = 4
+);
+
+DELETE FROM category_closure
+WHERE descendant_id IN (
+    SELECT descendant_id FROM (
+        SELECT descendant_id
+        FROM category_closure
+        WHERE ancestor_id = 4
+    ) AS subquery
+);
 ```
 
 ---
