@@ -30,7 +30,7 @@ FROM (
     SELECT job, deptno, sal
     FROM emp
 )
-pivot (
+PIVOT (
     AVG(sal)
     FOR deptno IN ('10', '20', '30')
 )
