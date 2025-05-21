@@ -81,3 +81,4 @@ public class CustomerController {
 **Reference**<br>
 - https://docs.spring.io/spring-cloud-openfeign/reference/spring-cloud-openfeign.html
 - https://code-lab1.tistory.com/414
+- https://techblog.woowahan.com/2630/
