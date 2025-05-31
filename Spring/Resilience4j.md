@@ -34,6 +34,14 @@ Resilience4j는 다음과 같은 6가지 모듈을 제공하고 있다.
 | recordFailurePredicate                       | throwable -> true  | 특정 예외가 실패로 측정되도록 하는 커스텀예외 (기본값으로 모든 예외는 실패로 기록)                                                                                |
 | ignoreExceptionPredicate                     | throwable -> false | 특정 예외가 측정되지 않도록 하는 커스텀예외 (기본값으로 모든 예외는 무시되지 않음)                                                                                |
 
+## TimeLimiter
+### 옵션
+
+| 옵션                  | default 값 | 설명                             |
+|---------------------|-----------|--------------------------------|
+| cancelRunningFuture | true      | timeout이 경과한 후 future 자동 취소 여부 |
+| timeoutDuration     | 1000 [ms] | timeout 시간                     |
+
 ---
 **Reference**<br>
 - https://resilience4j.readme.io/docs/getting-started
