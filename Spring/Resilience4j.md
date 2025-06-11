@@ -14,6 +14,13 @@ Resilience4j는 다음과 같은 6가지 모듈을 제공하고 있다.
 - `resilience4j-timelimiter`: 실행 시간 제한 관리
 - `resilience4j-cache`: 캐시 처리
 
+각 모듈은 다음과 같은 우선순위로 적용된다.
+1. BulkHead
+2. TimeLimiter
+3. RateLimiter
+4. CircuitBreaker
+5. Retry
+
 ## CircuitBreaker
 ### 옵션
 
