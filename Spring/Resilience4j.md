@@ -41,6 +41,20 @@ Resilience4j는 다음과 같은 6가지 모듈을 제공하고 있다.
 | recordFailurePredicate                       | throwable -> true  | 특정 예외가 실패로 측정되도록 하는 커스텀예외 (기본값으로 모든 예외는 실패로 기록)                                                                                |
 | ignoreExceptionPredicate                     | throwable -> false | 특정 예외가 측정되지 않도록 하는 커스텀예외 (기본값으로 모든 예외는 무시되지 않음)                                                                                |
 
+## Retry
+### 옵션
+| 옵션                    | default 값                                                  | 설명                                                                                                             |
+|-------------------------|------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| maxAttempts             | 3                                                          | 최대 재시도 수                                                                                                       |
+| waitDuration            | 500 [ms]                                                   | 재시도 간격. 재시도 사이의 고정된 대기 시간                                                                                      |
+| intervalFunction        | numOfAttempts -> waitDuration                              | 시도 횟수를 기반으로 실패 후 대기 간격을 설정하는 함수. 기본적으로 대기 시간(waitDuration)이 일정하게 유지된다.                                         |
+| intervalBiFunction      | (numOfAttempts, Either<throwable, result>) -> waitDuration | 시도 횟수와 결과 또는 예외를 기반으로 실패 후 대기 간격을 설정하는 함수. intervalFunction과 함께 사용하면 `IllegalStateException`이 발생한다.            |
+| retryOnResultPredicate  | result -> false                                            | 결과에 따라 재시도 여부를 결정하기 위한 Predicate                                                                               |
+| retryExceptionPredicate | throwable -> true                                          | 예외에 따라 재시도 여부를 결정하기 위한 Predicate                                                                               |
+| retryExceptions         | empty                                                      | 실패로 기록되는 재시도되는 에러 클래스 리스트                                                                                      |
+| ignoreExceptions        | empty                                                      | 무시되어 재시도되지 않는 에러 클래스 리스트                                                                                       |
+| failAfterMaxAttempts    | false                                                      | 설정한 maxAttempts만큼 재시도하고 나서도 결과가 여전히 retryOnResultPredicate를 통과하지 못했을 때 `MaxRetriesExceededException`을 발생시킬지 여부 |
+
 ## TimeLimiter
 ### 옵션
 
