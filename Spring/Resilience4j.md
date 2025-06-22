@@ -41,6 +41,22 @@ Resilience4j는 다음과 같은 6가지 모듈을 제공하고 있다.
 | recordFailurePredicate                       | throwable -> true  | 특정 예외가 실패로 측정되도록 하는 커스텀예외 (기본값으로 모든 예외는 실패로 기록)                                                                                |
 | ignoreExceptionPredicate                     | throwable -> false | 특정 예외가 측정되지 않도록 하는 커스텀예외 (기본값으로 모든 예외는 무시되지 않음)                                                                                |
 
+### 예시
+```yaml
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        minimum-number-of-calls: 5
+```
+
 ## Retry
 ### 옵션
 | 옵션                    | default 값                                                  | 설명                                                                                                             |
@@ -55,6 +71,23 @@ Resilience4j는 다음과 같은 6가지 모듈을 제공하고 있다.
 | ignoreExceptions        | empty                                                      | 무시되어 재시도되지 않는 에러 클래스 리스트                                                                                       |
 | failAfterMaxAttempts    | false                                                      | 설정한 maxAttempts만큼 재시도하고 나서도 결과가 여전히 retryOnResultPredicate를 통과하지 못했을 때 `MaxRetriesExceededException`을 발생시킬지 여부 |
 
+### 예시
+```yaml
+resilience4j:
+  retry:
+    configs:
+      default:
+        maxAttempts: 3
+        waitDuration: 10s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        retryExceptions:
+            - org.springframework.web.client.HttpServerErrorException
+            - java.io.IOException
+        ignoreExceptions:
+            - com.example.sunyesle.exception.BusinessException
+```
+
 ## TimeLimiter
 ### 옵션
 
@@ -62,6 +95,15 @@ Resilience4j는 다음과 같은 6가지 모듈을 제공하고 있다.
 |---------------------|-----------|--------------------------------|
 | cancelRunningFuture | true      | timeout이 경과한 후 future 자동 취소 여부 |
 | timeoutDuration     | 1000 [ms] | timeout 시간                     |
+
+### 예시
+```yaml
+resilience4j:
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3s
+```
 
 ---
 **Reference**<br>
