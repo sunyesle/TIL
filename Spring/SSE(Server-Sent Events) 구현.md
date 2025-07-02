@@ -18,6 +18,49 @@ HTTP 기반으로, 서버의 데이터를 실시간으로 streaming 한다.
 
 ![websocket sse](https://github.com/user-attachments/assets/3abb5389-5ad2-44e6-a0d4-fcab31a60342)
 
+## SSE 통신 개요
+SSE를 이용하는 통신의 개요는 다음과 같다.
+
+### Client: SSE 연결 요청
+SSE의 미디어 타입은 `text/event-stream`이다.
+이벤트는 캐싱하지 않으며, 지속적 연결을 사용해야 한다.
+```
+GET /connect HTTP/1.1
+Accept: text/event-stream
+Cache-Control: no-cache
+Connection: keep-alive
+```
+
+### Server: SSE 연결 요청 응답
+응답의 미디어 타입은 `text/event-stream`이다.
+서버는 전달할 이벤트가 생길 때마다 데이터를 Chuck 단위로 전달한다.
+```
+HTTP/1.1 200 OK
+Content-Type: text/event-stream;charset=UTF-8
+Cache-Control: no-cache
+Connection: keep-alive
+Transfer-Encoding: chunked
+```
+
+### Server: 이벤트 전달
+서로 다른 이벤트는 줄바꿈 문자 두개(`\n\n`)로 구분된다.
+각 이벤트는 한 개 이상의 `name:value` 필드로 구성되며 이들은 줄바꿈 문자 한개(`\n`)로 구분된다.
+- id: 이벤트 id
+- event: 이벤트 타입
+- data: 이벤트 데이터, 데이터가 많으면 Multiline으로 구성한다.
+```
+id:0
+event:type1
+data:hello
+
+id:1
+event:type2
+data:{
+data:"msg":"2",
+data:"id":123
+data:}
+```
+
 ## 클라이언트 예시 코드
 ```js
 // SSE 이벤트 수신
