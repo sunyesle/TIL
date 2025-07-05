@@ -74,6 +74,182 @@ System.out.println(map); // {A=1, B=2}
   - 값이 필요할 때만 mappingFunction을 호출해서 값을 계산하고 넣는다.
   - 값 생성 비용이 크거나, 키에 따라 동적으로 값을 계산해야 할 때 사용한다.
 
+## compute(), computeIfPresent(), merge()
+value 값을 업데이트하는 메서드이다.
+
+### compute()
+```java
+default V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    Objects.requireNonNull(remappingFunction);
+    V oldValue = get(key);
+
+    V newValue = remappingFunction.apply(key, oldValue);
+    if (newValue == null) {
+        // delete mapping
+        if (oldValue != null || containsKey(key)) {
+            // something to remove
+            remove(key);
+            return null;
+        } else {
+            // nothing to do. Leave things as they were.
+            return null;
+        }
+    } else {
+        // add or replace old mapping
+        put(key, newValue);
+        return newValue;
+    }
+}
+```
+`remappingFunction.apply(key, oldValue)`
+
+key 값의 존재 여부와 상관없이 remappingFunction을 호출한다.
+
+- remappingFunction의 반환 값이 null인 경우
+  - key 값이 존재하는 경우
+    - 값을 삭제하고 null을 반환한다.
+  - key 값이 존재하지 않는 경우
+    - null을 반환한다.
+- remappingFunction의 반환 값 null이 아닌 경우
+  - 값을 업데이트하고, 새로운 값을 반환한다.
+
+```java
+Map<String, Integer> map = new HashMap<>();
+
+// Key 값이 존재하는 경우
+map.put("A", 1);
+map.compute("A", (key, value) -> value + 1);
+System.out.println(map.get("A")); // 2
+System.out.println(map.containsKey("A")); // true
+
+// Key 값이 존재하지 않는 경우
+map.compute("B", (key, value) -> value == null ? 0 : value + 1); // NullPointerException 방지
+System.out.println(map.get("B")); // 0
+System.out.println(map.containsKey("B")); // true
+
+// 람다식의 결과가 null 인 경우
+map.put("C", 1);
+map.compute("C", (key, value) -> null);
+System.out.println(map.get("C")); // null
+System.out.println(map.containsKey("C")); // false
+
+System.out.println(map); // {A=2, B=0}
+```
+
+### computeIfPresent()
+```java
+default V computeIfPresent(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    Objects.requireNonNull(remappingFunction);
+    V oldValue;
+    if ((oldValue = get(key)) != null) {
+        V newValue = remappingFunction.apply(key, oldValue);
+        if (newValue != null) {
+            put(key, newValue);
+            return newValue;
+        } else {
+            remove(key);
+            return null;
+        }
+    } else {
+        return null;
+    }
+}
+```
+`remappingFunction.apply(key, oldValue)`
+
+- key 값이 존재하고, 값이 null이 아닌 경우
+  - remappingFunction의 반환 값이 null인 경우
+    - 값을 삭제하고 null을 반환한다.
+  - remappingFunction의 반환 값이 null이 아닌 경우
+    - 값을 업데이트한다.
+- key 값이 존재하지 않거나, 값이 null인 경우
+  - null을 반환한다.
+
+```java
+Map<String, Integer> map = new HashMap<>();
+
+// Key 값이 존재하는 경우
+map.put("A", 1);
+map.computeIfPresent("A", (key, value) -> value + 1);
+System.out.println(map.get("A")); // 2
+System.out.println(map.containsKey("A")); // true
+
+// Key 값이 존재하지 않는 경우
+map.computeIfPresent("B", (key, value) -> value + 1);
+System.out.println(map.get("B")); // null
+System.out.println(map.containsKey("B")); // false
+
+// 람다식의 결과가 null 인 경우
+map.put("C", 1);
+map.computeIfPresent("C", (key, value) -> null);
+System.out.println(map.get("C")); // null
+System.out.println(map.containsKey("C")); // false
+
+System.out.println(map); // {A=2}
+```
+
+### merge()
+```java
+default V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+    Objects.requireNonNull(remappingFunction);
+    Objects.requireNonNull(value);
+    V oldValue = get(key);
+    V newValue = (oldValue == null) ? value :
+               remappingFunction.apply(oldValue, value);
+    if (newValue == null) {
+        remove(key);
+    } else {
+        put(key, newValue);
+    }
+    return newValue;
+}
+```
+`remappingFunction.apply(oldValue, value)`
+
+- key 값이 존재하지 않으면, value를 그대로 put한다.
+- key 값이 존재하면 remappingFunction을 호출한다.
+  - remappingFunction의 반환 값이 null인 경우
+    - 값을 삭제한다.
+  - remappingFunction의 결과가 null이 아닌 경우
+    - 값을 업데이트한다.
+
+```java
+Map<String, Integer> map = new HashMap<>();
+
+// Key 값이 존재하는 경우
+map.put("A", 1);
+map.merge("A", 0, (oldValue, value) -> oldValue + 1);
+System.out.println(map.get("A")); // 2
+System.out.println(map.containsKey("A")); // true
+
+// Key 값이 존재하지 않는 경우
+map.merge("B", 0, (oldValue, value) -> oldValue + 1);
+System.out.println(map.get("B")); // 0
+System.out.println(map.containsKey("B")); // true
+
+// 람다식의 결과가 null 인 경우
+map.put("C", 1);
+map.merge("C", 0, (oldValue, value) -> null);
+System.out.println(map.get("C")); // null
+System.out.println(map.containsKey("C")); // false
+
+System.out.println(map); // {A=2, B=0}
+```
+
+### 차이점
+- `compute()`
+  - `remappingFunction.apply(key, oldValue)`
+  - key 값의 존재 여부와 상관없이 remappingFunction을 호출한다.
+  - "있으면 갱신, 없으면 새로 생성" 같은 유연한 처리가 필요할 때 사용한다.
+- `computeIfPresent()`
+  - `remappingFunction.apply(key, oldValue)`
+  - key 값이 존재하고, value가 null이 아닐 때만 remappingFunction을 호출한다.
+  - 기존 데이터만 수정할 때 사용한다.
+- `merge()`
+  - `remappingFunction.apply(oldValue, value)`
+  - key 값이 존재하고, value가 null이 아닐 때만 remappingFunction을 호출한다.
+  - 기존값과 새로운 값을 병합할 때 사용한다.
+
 ---
 **Reference**<br>
 - https://bangpurin.tistory.com/213
