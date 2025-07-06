@@ -250,6 +250,21 @@ System.out.println(map); // {A=2, B=0}
   - key 값이 존재하고, value가 null이 아닐 때만 remappingFunction을 호출한다.
   - 기존값과 새로운 값을 병합할 때 사용한다.
 
+## getOrDefault()
+찾는 key가 존재한다면 찾는 key의 값을 반환하고 없다면 기본값을 반환한다.
+```java
+Map<String, Integer> map = new HashMap<>();
+
+// Key 값이 존재하는 경우
+map.put("A", 1);
+Integer value1 = map.getOrDefault("A", 0);
+System.out.println(value1); // 1
+
+// Key 값이 존재하지 않는 경우
+Integer value2 = map.getOrDefault("B", 0);
+System.out.println(value2); // 0
+```
+
 ---
 **Reference**<br>
 - https://bangpurin.tistory.com/213
