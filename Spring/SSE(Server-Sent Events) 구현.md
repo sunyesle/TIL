@@ -21,6 +21,8 @@ HTTP 기반으로, 서버의 데이터를 실시간으로 streaming 한다.
 ## SSE 통신 개요
 SSE를 이용하는 통신의 개요는 다음과 같다.
 
+<img width="1009" alt="Image" src="https://github.com/user-attachments/assets/5e50d037-b49f-4854-bab6-7b6bfc94830e" />
+
 ### Client: SSE 연결 요청
 SSE의 미디어 타입은 `text/event-stream`이다.
 이벤트는 캐싱하지 않으며, 지속적 연결을 사용해야 한다.
@@ -47,7 +49,8 @@ Transfer-Encoding: chunked
 각 이벤트는 한 개 이상의 `name:value` 필드로 구성되며 이들은 줄바꿈 문자 한개(`\n`)로 구분된다.
 - id: 이벤트 id
 - event: 이벤트 타입
-- data: 이벤트 데이터, 데이터가 많으면 Multiline으로 구성한다.
+- data: 이벤트 데이터. 데이터가 많으면 Multiline으로 구성한다.
+- comment: 주석. 콜론으로 시작한다. 클라이언트에 의해 무시되며 연결 유지(heartbeat), 디버깅 등의 용도로 사용된다.
 ```
 id:0
 event:type1
@@ -59,6 +62,8 @@ data:{
 data:"msg":"2",
 data:"id":123
 data:}
+
+:hartbeat
 ```
 
 ## 클라이언트 예시 코드
