@@ -95,7 +95,7 @@ eventSource.addEventListener("notice", (e) => {
 });
 ```
 
-## 서버 예시 코드
+## 서버 예시 코드 - Spring MVC
 Spring Framework 4.2부터 SSE 통신을 지원하는 `SseEmitter` API를 제공한다.
 
 **Controller**
@@ -175,9 +175,95 @@ public class SseService {
                     .name(eventName)
                     .data(data));
         } catch (IOException e) {
-            emitter.completeWithError(e);
+            emitter.completeWithError( e);
             emitters.remove(userId);
         }
+    }
+}
+```
+
+## 서버 예시 코드 - Spring WebFlux
+
+**Controller**
+```java
+@RestController
+@RequestMapping("/api/sse")
+@RequiredArgsConstructor
+public class SseController {
+    private final SseService sseService;
+
+    @GetMapping("/connect")
+    public Flux<ServerSentEvent<String>> connect(@RequestParam String userId) {
+        return sseService.connect(userId);
+    }
+
+    @PostMapping("/send")
+    public void send(@RequestBody SseRequest request) {
+        sseService.send(request);
+    }
+}
+```
+
+**DTO**
+```java
+public record SseRequest(String userId, String message) {
+}
+```
+
+**Service**
+```java
+@Slf4j
+@Service
+public class SseService {
+
+    private final Map<String, Sinks.Many<ServerSentEvent<String>>> sinks = new ConcurrentHashMap<>();
+
+    public Flux<ServerSentEvent<String>> connect(String userId) {
+        Sinks.Many<ServerSentEvent<String>> sink =
+                sinks.computeIfAbsent(userId, id -> Sinks.many().multicast().onBackpressureBuffer());
+
+        log.info("User connected userId={}", userId);
+
+        // 최초 연결 이벤트
+        Flux<ServerSentEvent<String>> connectFlux = Flux
+                .just(ServerSentEvent.<String>builder()
+                        .event("connect")
+                        .data("SSE connection established").build());
+
+        // SSE 연결 유지를 위한 heartbeat 이벤트 (30초 간격)
+        Flux<ServerSentEvent<String>> heartbeatFlux = Flux
+                .interval(Duration.ofSeconds(30))
+                .map(i -> ServerSentEvent.<String>builder()
+                        .comment("heartbeat").build());
+
+        Flux<ServerSentEvent<String>> messageFlux = sink.asFlux()
+                .doOnCancel(() -> {
+                    log.info("[SSE] userId={} 연결 취소", userId);
+                })
+                .doOnError(e -> {
+                    log.info("[SSE] userId={} 에러 발생: {}", userId, e.getMessage());
+                });
+
+        return Flux.merge(connectFlux, heartbeatFlux, messageFlux)
+                .doFinally(signalType -> {
+                    log.info("[SSE] userId={} 연결 종료. signal={}", userId, signalType);
+                    sinks.remove(userId);
+                });
+    }
+
+    public void send(SseRequest request) {
+        Sinks.Many<ServerSentEvent<String>> sink = sinks.get(request.userId());
+
+        if (sink == null) {
+            log.info("No connection for userId={}", request.userId());
+            return;
+        }
+
+        ServerSentEvent<String> event = ServerSentEvent.<String>builder()
+                .event("send")
+                .data(request.message())
+                .build();
+        sink.tryEmitNext(event);
     }
 }
 ```
