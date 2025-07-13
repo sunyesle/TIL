@@ -47,10 +47,10 @@ Transfer-Encoding: chunked
 ### Server: 이벤트 전달
 서로 다른 이벤트는 줄바꿈 문자 두개(`\n\n`)로 구분된다.
 각 이벤트는 한 개 이상의 `name:value` 필드로 구성되며 이들은 줄바꿈 문자 한개(`\n`)로 구분된다.
-- id: 이벤트 id
-- event: 이벤트 타입
-- data: 이벤트 데이터. 데이터가 많으면 Multiline으로 구성한다.
-- comment: 주석. 콜론으로 시작한다. 클라이언트에 의해 무시되며 연결 유지(heartbeat), 디버깅 등의 용도로 사용된다.
+- `id`: 이벤트 id
+- `event`: 이벤트 타입
+- `data`: 이벤트 데이터. 데이터가 많으면 Multiline으로 구성한다.
+- `comment`: 주석. 콜론으로 시작한다. 클라이언트에 의해 무시되며 연결 유지(heartbeat), 디버깅 등의 용도로 사용된다.
 ```
 id:0
 event:type1
@@ -273,3 +273,5 @@ public class SseService {
 - https://developer.mozilla.org/en-US/docs/Web/API/EventSource
 - https://gong-check.github.io/dev-blog/BE/%EC%96%B4%EC%8D%B8%EC%98%A4/sse/sse/
 - https://jforj.tistory.com/419
+- https://tussle.tistory.com/1118
+
