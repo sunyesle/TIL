@@ -15,6 +15,12 @@ Schema Registry는 Kafka와 별도로 동작하는 프로세스로, 데이터 �
 5. 컨슈머의 `KafkaAvroDeserializer`는 메시지에서 스키마 ID를 가져오고, 이를 사용하여 스키마 레지스트리에서 스키마를 조회한다.
 6. 메시지가 역직렬화 되고, 검색된 스키마를 사용하여 검증된다.
 
+### Producer 직렬화 과정
+<img width="1116" height="862" alt="Image" src="https://github.com/user-attachments/assets/73264e9d-bed3-43d3-ab28-8703b17f249d" />
+
+### Consumer 역직렬화 과정
+<img width="1273" height="862" alt="Image" src="https://github.com/user-attachments/assets/6926981c-ce68-45c8-83a7-a8f935bc5e7c" />
+
 ## Schema 호환성 유형
 예를 들어 v1, v2 스키마가 있다고 하자.
 
