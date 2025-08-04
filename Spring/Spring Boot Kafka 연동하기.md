@@ -74,6 +74,38 @@ public class KafkaConsumerConfig {
 }
 ```
 
+## KafkaTemplate
+> Producer - 메시지 전송
+```java
+@Component
+@RequiredArgsConstructor
+public class KafkaMessageProducer {
+    private static final String TOPIC_NAME = "message-topic";
+
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    public void sendMessage(String message) {
+        kafkaTemplate.send(TOPIC_NAME, message);
+    }
+}
+```
+
+## @KafkaListener
+> Consumer - 메시지 수신
+```java
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class KafkaMessageConsumer {
+    private static final String TOPIC_NAME = "message-topic";
+
+    @KafkaListener(topics = TOPIC_NAME)
+    public void listen(String message) {
+        log.info("Consumed message: value={}", message);
+    }
+}
+```
+
 ---
 **Reference**<br>
 - https://adjh54.tistory.com/640
