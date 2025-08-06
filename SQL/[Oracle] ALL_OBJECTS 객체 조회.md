@@ -25,13 +25,43 @@ ALL_OBJECTS는 사용자가 접근 가능한 모든 객체에 대한 메타데�
 ## 예시
 ### INVALID 상태의 객체 조회
 ```sql
-select owner,
+SELECT owner,
        object_type,
        object_name,
        status
-from ALL_OBJECTS
-where status = 'INVALID'
-order by owner, object_type, object_name; 
+FROM all_objects
+WHERE status = 'INVALID'
+ORDER BY owner, object_type, object_name;
+```
+
+### ALL_로 시작하는 뷰 조회
+```sql
+SELECT owner,
+       object_type,
+       object_name
+FROM all_objects
+WHERE object_name LIKE 'ALL_%'
+AND object_type = 'VIEW'
+ORDER BY owner, object_type, object_name;
+```
+
+### 오늘 변경된 객체 조회
+```sql
+SELECT owner,
+       object_type,
+       object_name,
+       last_ddl_time
+FROM all_objects
+WHERE TRUNC(last_ddl_time) = TRUNC(SYSDATE);
+```
+
+### 최근 생성된 순으로 객체 조회
+```sql
+SELECT owner,
+       object_type,
+       object_name
+FROM all_objects
+ORDER BY created desc;
 ```
 
 ---
