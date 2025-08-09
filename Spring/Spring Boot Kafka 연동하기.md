@@ -141,7 +141,22 @@ public class KafkaMessageConsumer {
 }
 ```
 
-## spring kafka properties
+## 카프카 설정 주의 사항
+### 컨슈머 자동 커밋
+```properties
+enable.auto.commit = true # 컨슈머 자동 커밋 활성화
+auto.commit.interval.ms = 5000ms # 5초 간격으로 커밋을 진행
+max.poll.records = 100 # poll을 요청할 때 가져오는 최대 레코드 수
+```
+해당 설정에서는 다음과 같은 상황에서 메시지 유실 또는 중복이 발생할 수 있다.
+
+**1. 메시지 유실**<br>
+메시지의 처리 시간이 5초보다 긴 경우, 메시지 처리가 완료되기 전에 오프셋 커밋이 일어난다. 이후 메시지 처리에서 오류가 발생하는 경우 해당 메시지는 다시 처리할 수 없게된다.
+
+**2. 메시지 중복**<br>
+poll() 메서드를 호출하여 100개의 레코드를 가져온다. 이 중 30개의 레코드를 처리한 상태에서 커밋이 이루어지기 전에 리밸런싱이 발생하여 컨슈머들이 재할당되는 경우, 마지막 커밋으로 부터 다시 데이터를 polling하여 이미 처리한 30개의 레코드를 다시 중복으로 처리하게 된다.
+
+## spring kafka properties 
 지원되는 옵션은 [KafkaProperties.java](https://github.com/spring-projects/spring-boot/blob/3.5.x/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/kafka/KafkaProperties.java) 파일을 참조
 ```yml
 spring:
@@ -228,3 +243,7 @@ spring:
 - https://adjh54.tistory.com/641
 - https://devel-repository.tistory.com/46
 - https://www.baeldung.com/spring-kafka
+
+컨슈머 자동 커밋 주의사항
+- https://pula39.tistory.com/19
+- https://dkswnkk.tistory.com/744
