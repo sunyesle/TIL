@@ -20,13 +20,13 @@ JSON(*.avsc) 형식의 스키마를 통해 데이터 구조를 정의할 수 있
 ```
 
 ## Gradle 설정
-`generateAvro` Gradle 태스크를 실행하면 `src/main/resources/avro` 폴더 내의 `.avsc` 파일이 Java 코드로 변환된다.
+`generateAvro` Gradle 태스크를 실행하면 `src/main/avro` 폴더 내의 `.avsc` 파일이 Java 코드로 변환되어 `build/generated-main-avro-java` 폴더에 저장된다.
 ```groovy
 import com.github.davidmc24.gradle.plugin.avro.GenerateAvroJavaTask
 
 plugins {
     id 'java'
-    id 'com.github.davidmc24.gradle.plugin.avro-base' version '1.9.1'
+    id 'com.github.davidmc24.gradle.plugin.avro' version '1.9.1'
 }
 
 dependencies {
@@ -34,20 +34,33 @@ dependencies {
     implementation 'org.apache.avro:avro:1.11.4'
 }
 
-def generateAvro = tasks.register("generateAvro", GenerateAvroJavaTask) {
-    source("src/main/resources/avro") // Avro 스키마 파일 위치 (*.avsc)
-    outputDir = file("build/generated") // 생성된 Java 파일 출력 디렉토리
-}
-
 sourceSets {
-    getByName("main") {
-        // 생성된 Java 파일 디렉토리를 컴파일 대상에 추가
-        java.srcDir("$buildDir/generated")
-    }
+	main {
+		java {
+			srcDirs += 'build/generated-main-avro-java'
+		}
+	}
 }
 
 tasks.named("compileJava") {
     dependsOn(generateAvro)
+}
+```
+
+### source, outputDir 사용자 지정
+```groovy
+def generateAvro = tasks.register('generateAvro', GenerateAvroJavaTask) {
+	source('src/main/resources/avro') // Avro 스키마 파일 위치 (*.avsc)
+	outputDir = file('build/generated') // 생성된 Java 파일 출력 디렉토리
+}
+
+sourceSets {
+	main {
+		java {
+			// outputDir 설정에 맞게 수정
+			srcDirs += 'build/generated'
+		}
+	}
 }
 ```
 
