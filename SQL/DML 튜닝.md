@@ -76,6 +76,151 @@ Redo 로그도 파일이다. Append 방식으로 기록하더라도 디스크 I/
 
 트랜잭션을 논리적으로 잘 정의함으로써 불필요한 커밋이 발생하지 않도록 구현해야 한다.
 
+## 데이터베이스 Call과 성능
+Call의 발생 위치에 따라 다음과 같이 종류를 나눌 수 있다.
+- **User Call**: 네트워크를 경유해 DBMS 외부로부터 인입되는 Call이다.
+- **Recursive Call**: DBMS 내부에서 발생하는 Call이다. SQL 파싱과 최적화 과정에서 발생하는 데이터 딕셔너리 조회, 사용자 정의 함수/프로시저/트리거에 내장된 SQL을 실행할 때 발생하는 Call이 여기 해당된다.
+
+Call이 많으면 성능은 느릴 수밖에 없다. 특히, 네트워크를 경유하는 User Call이 성능에 미치는 영향은 매우 크다.
+
+### One SQL의 중요성
+업무 로직이 복잡하지 않다면, 한 번의 Call로 처리할 수 있도록 One SQL로 구현하려고 노력해야 한다.
+- Insert Into Select
+- 수정가능 조인 뷰
+- Merge 문
+
+### Array Processing
+업무 로직이 복잡하여 One SQL로 구현하는게 힘들다면, JDBC의 addBatch/executeBatch 를 활용하여 Call 부하를 줄일 수 있다.
+
+## 수정가능 조인 뷰
+### 전통적인 UPDATE 문
+```sql
+update 고객 c
+set 최종거래일시 = (select max(거래일시) from 거래
+                  where 고객번호 = c.고객번호
+                  and 거래일시 >= trunc(add_months(sysdate, -1)))
+  , 최근거래횟수 = (select count(*) from 거래
+                  where 고객번호 = c.고객번호
+                  and 거래일시 >= trunc(add_months(sysdate, -1)))
+  , 최근거래금액 = (select sum(거래금액) from 거래
+                  where 고객번호 = c.고객번호
+                  and 거래일시 >= trunc(add_months(sysdate, -1)))
+where exists (select 'x' from 거래
+              where 고객번호 = c.고객번호
+              and 거래일시 >= trunc(add_months(sysdate, -1)))
+```
+
+다음과 같이 고칠 수 있다. 이전보다 개선되었지만 한 달 이내 고객별 거래 데이터를 두 번 조회하는 비효율은 존재한다.
+총 고객 수와 한 달 이내 거래 고객 수에 따라 성능이 좌우된다.
+```sql
+update 고객 c
+set (최종거래일시, 최근거래횟수, 최근거래금액) = 
+    (select max(거래일시), count(*), sum(거래금액)
+     from 거래
+     where 고객번호 = c.고객번호
+     and 거래일시 >= trunc(add_months(sysdate, -1)))
+where exists (select 'x' from 거래
+              where 고객번호 = c.고객번호
+              and 거래일시 >= trunc(add_months(sysdate, -1)))
+```
+
+만약 총 고객 수가 아주 많다면 다음과 같이 해시 세미 조인으로 유도하는 것을 고려할 수 있다.
+```sql
+update 고객 c
+set (최종거래일시, 최근거래횟수, 최근거래금액) = 
+    (select max(거래일시), count(*), sum(거래금액)
+     from 거래
+     where 고객번호 = c.고객번호
+     and 거래일시 >= trunc(add_months(sysdate, -1)))
+where exists (select /*+ unest hash_sj */ 'x' from 거래
+              where 고객번호 = c.고객번호
+              and 거래일시 >= trunc(add_months(sysdate, -1)))
+```
+
+만약 한 달 이내에 거래를 발생시킨 고객이 많아 Update 발생량이 많다면 다음과 같이 변경하는 것을 고려할 수 있다. 하지만 모든 고객 레코드에 Lock이 걸리는 것은 물론, 같은 값으로 갱신되는 비중이 높을수록 Redo 로그 발생량이 증가해 오히려 비효율적일 수 있다.
+```sql
+update 고객 c
+set (최종거래일시, 최근거래횟수, 최근거래금액) = 
+    (select nvl(max(거래일시), c.최종거래일시)
+          , decode(count(*), 0, 최근거래횟수, count(*))
+          , nvl(sum(거래금액), c.최근거래금액)
+     from 거래
+     where 고객번호 = c.고객번호
+     and 거래일시 >= trunc(add_months(sysdate, -1)))
+```
+이처럼 다른 테이블과 조인이 필요할 때 전통적인 UPDATE 문을 사용하면 비효율을 완전히 해소할 수 없다.
+
+### 수정가능 조인 뷰
+수정가능 조인 뷰를 활용하면 참조 테이블과 두 번 조인하는 비효율을 없앨 수 있다.
+```sql
+update (
+  select /*+ ordered use_hash(c) no_merge(t) */
+         c.최종거래일시, c.최근거래횟수, c.최근거래금액
+         t.거래일시, t.거래횟수, t.거래금액
+  from (select 고객
+             , max(거래일시) 거래일시, count(*) 거래횟수, sum(거래금액) 거래금액
+        from 거래 t
+        where 거래일시 >= trunc(add_months(sysdate, -1))
+        group by 고객) t
+      , 고객 c
+  where c.고객번호 = t.고객번호
+) 
+set 최종거래일시 = 거래일시
+  , 최근거래횟수 = 거래횟수
+  , 최근거래금액 = 거래금액
+```
+**조인 뷰**는 FROM 절에 두개 이상 테이블을 가진 뷰를 말한다.<br>
+**수정가능 조인 뷰**는 입력, 수정, 삭제가 허용되는 조인 뷰를 말한다.
+
+1쪽 집합과 조인하는 M쪽 집합에만 입력, 수정, 삭제가 허용된다.<br>
+1쪽 집합에 PK 제약을 설정하거나 Unique 인덱스를 생성해야 수정가능 조인 뷰를 통한 입력, 수정, 삭제가 가능하다.
+
+예를 들어 DEPT와 EMP는 1:M 관계이며, DEPT.deptno는 EMP.deptno의 외래 키로 사용된다.<br>
+EMP 테이블의 데이터만 수정 가능하며, DEPT.deptno에 PK 제약 또는 Unique 인덱스가 필요하다.
+
+#### ORA-01779 오류 회피
+```sql
+update (
+  select d.deptno, d.avg_sal d_avg_sal, e.avg_sal e_avg_sal
+  from (select deptno, round(avg(sal), 2) avg_sal from emp group by deptno) e
+     , dept d
+  where d.deptno = e.deptno
+)
+set d_avg_sal = e_avg_sal
+```
+11g 이하 버전에서는 위 UPDATE 문을 실행하면 ORA-01779 오류가 발생한다.<br>
+EMP 테이블을 DEPTNO로 Group By 했으므로 DEPTNO 컬럼으로 조인한 DEPT 테이블은 키가 보존되는데도 옵티마이저가 불필요한 제약을 가한 것이다.
+
+10g 버전에서는 `/*+ bypass_ujvc */`힌트를 사용해 오류를 회피할 수 있다.<br>
+11g 버전에서는 이 힌트를 사용할 수 없게 되어서 위 UPDATE 문을 실행할 방법이 없다.<br>
+12c 버전부터는 수정가능 조인 뷰 기능이 개선되어 힌트를 사용하지 않아도 오류없이 UPDATE문이 실행된다.
+
+예를 들어, 고객_t 테이블에 Unique 인덱스가 없는 경우 아래 쿼리를 실행할 수 없지만
+```sql
+update ( 
+  select o.주문금액, o.할인금액, c.고객등급
+  from 주문_t o, 고객_t c
+  where o.고객번호 = c.고객번호
+  and o.주문금액 >= 1000000
+  and c.고객등급 = 'A'
+)
+set 할인금액 = 주문금액 * 0.2
+  , 주문금액 = 주문금액 * 0.8
+```
+12c에서는 고객_t 테이블을 Group By 처리하여 ORA-01779 에러를 회피할 수 있다.
+```sql
+update (
+     select o.주문금액, o.할인금액, c.고객등급
+     from (select 고객번호, 고객등급 고객_t where 고객등급 = 'A' group by 고객번호) c
+        , 주문_t o
+     where o.고객번호 = c.고객번호
+     and o.주문금액 >= 1000000
+)
+set 할인금액 = 주문금액 * 0.2
+  , 주문금액 = 주문금액 * 0.8
+```
+배치 프로그램 등에서 사용하는 중간 임시 테이블에는 일일이 PK 제약이나 인덱스를 생성하지 않으므로 이 패턴이 유용할 수 있다.
+
 ---
 **Reference**<br>
 - 친절한 SQL 튜닝 6장
