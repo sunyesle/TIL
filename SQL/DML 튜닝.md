@@ -221,6 +221,35 @@ set 할인금액 = 주문금액 * 0.2
 ```
 배치 프로그램 등에서 사용하는 중간 임시 테이블에는 일일이 PK 제약이나 인덱스를 생성하지 않으므로 이 패턴이 유용할 수 있다.
 
+## MERGE문 활용
+조건에 따라 INSERT와 UPDATE를 선택적으로 처리할 수 있다.
+
+다음과 같이 수정가능 조인 뷰 기능을 대체할 수 있게 되었다.
+```sql
+-- 수정가능 조인 뷰
+update (
+  select d.deptno, d.avg_sal d_avg_sal, e.avg_sal e_avg_sal
+  from (select deptno, round(avg(sal), 2) avg_sal from emp group by deptno) e
+     , dept d
+  where d.deptno = e.deptno
+)
+set d_avg_sal = e_avg_sal
+
+-- Merge 문
+merge into dept d
+using (select deptno, round(avg(sal), 2) avg_sal from emp group by deptno) e
+on (d.deptno = e.deptno)
+when matched then
+  update set d.avg_sal = e.avg_sal
+```
+
+## 그 외 DML 튜닝 방법
+- Direct Path I/O 활용
+  - Direct Path I/O는 버퍼 캐시를 경유하지 않고 곧바로 데이터 블록을 읽고 쓸 수 있는 기능이다.
+  - Direct Path Insert, 병렬 쿼리, 병렬 DML
+- 파티션 활용
+  - 테이블 파티션, 인덱스 파티션
+
 ---
 **Reference**<br>
 - 친절한 SQL 튜닝 6장
