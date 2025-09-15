@@ -36,6 +36,7 @@
             <param-name>exampleParam</param-name>
             <param-value>paramValue</param-value>
         </init-param>
+        <load-on-startup>1</load-on-startup>
     </servlet>
     
     <!-- Servlet 매핑 -->
