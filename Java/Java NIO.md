@@ -68,3 +68,5 @@ Chennel은 Stream과 유사하지만 몇 가지 차이점이 있다.
 ---
 **Reference**<br>
 - https://jenkov.com/tutorials/java-nio/overview.html
+- https://engineering.linecorp.com/ko/blog/do-not-block-the-event-loop-part2
+- https://brewagebear.github.io/fundamental-nio-and-io-models/
