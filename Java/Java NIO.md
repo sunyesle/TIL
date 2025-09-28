@@ -48,7 +48,7 @@ Chennel은 Stream과 유사하지만 몇 가지 차이점이 있다.
 
 ### Selector
 셀렉터는 하나 이상의 채널 인스턴스를 검사하고 어떤 채널이 읽기 또는 쓰기 작업을 수행할 준비가 되었는지 판단하는 구성 요소다.
-이를 통해 단일 스레드가 여러 채널을 관리할 수 있다.
+이를 통해 단일 스레드가 여러 채널을 관리할 수 있다. (Multiplexing, 멀티플렉싱)
 
 셀렉터에 등록할 수 있는 이벤트는 다음 4가지이다.
 - `OP_ACCEPT`: 클라이언트가 서버에 접속했을 때 발생하는 이벤트
@@ -64,9 +64,106 @@ Chennel은 Stream과 유사하지만 몇 가지 차이점이 있다.
 | `SocketChannel`       | `OP_CONNECT`, `OP_READ`, `OP_WRITE` |
 | `DatagramChannel`     | `OP_READ`, `OP_WRITE`               |
 
+## 예시
+Java NIO를 활용한 멀티플렉싱 기반의 다중 접속 서버이다.
+
+```java
+public class NIOEchoServer {
+
+    private static final String EXIT = "EXIT";
+
+    public static void main(String[] args) throws IOException {
+        // 셀렉터를 생성한다.
+        Selector selector = Selector.open();
+
+        // ServerSocketChannel은 TCP 연결 요청이 들어올 때까지 대기하다가 요청이 들어오면 수락하는 채널이다.
+        ServerSocketChannel serverSocket = ServerSocketChannel.open();
+        serverSocket.bind(new InetSocketAddress("localhost", 8080)); // 8080 포트를 수신
+        serverSocket.configureBlocking(false); // 논블로킹 모드로 변경
+
+        // 셀렉터에 채널을 등록한다. 연결 수락 이벤트를 감지하도록 한다.
+        serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+
+        ByteBuffer buffer = ByteBuffer.allocate(256);
+        System.out.println("Server started on port 8080");
+
+        while (true) {
+            // 하나 이상의 채널이 준비될 때까지 블록한다.
+            selector.select();
+
+            // 준비된 채널의 집합을 받는다.
+            Set<SelectionKey> keys = selector.selectedKeys();
+            Iterator<SelectionKey> iter = keys.iterator();
+
+            while (iter.hasNext()) {
+                SelectionKey key = iter.next();
+
+                // 연결 수락 이벤트: 클라이언트가 새로 접속했을 때 (ServerSocketChannel)
+                if (key.isAcceptable()) {
+                    register(selector, serverSocket);
+                }
+
+                // 읽기 이벤트: 클라이언트가 보낸 데이터를 읽을 준비가 되었을 때 (SocketChannel)
+                if (key.isReadable()) {
+                    answerWithEcho(buffer, (SocketChannel) key.channel());
+                }
+
+                iter.remove();
+            }
+        }
+    }
+
+    private static void register(Selector selector, ServerSocketChannel serverSocket) throws IOException {
+        // 연결을 수락한다. 클라이언트와의 통신을 위한 SocketChannel이 반환된다.
+        SocketChannel client = serverSocket.accept();
+        client.configureBlocking(false); // 논블로킹 모드로 변경
+
+        // 셀렉터에 채널을 등록한다. 읽기 이벤트를 감지하도록 한다.
+        client.register(selector, SelectionKey.OP_READ);
+        System.out.println("New client connected: " + client.getRemoteAddress());
+    }
+
+    private static void answerWithEcho(ByteBuffer buffer, SocketChannel client) {
+        try {
+            // 요청 데이터를 읽는다.
+            client.read(buffer);
+
+            // 버퍼를 읽기 모드로 전환한다.
+            buffer.flip();
+
+            // 버퍼에 저장된 바이트 데이터를 문자열로 변환한다.
+            String msg = new String(buffer.array(), 0, buffer.limit()).trim();
+            System.out.println("Received: " + msg);
+
+            // 연결 종료 메시지 처리
+            if (EXIT.equalsIgnoreCase(msg)) {
+                System.out.println("Closing client: " + client.getRemoteAddress());
+                client.close();
+            }
+
+            // 읽은 데이터를 다시 클라이언트에게 전송한다. (echo)
+            client.write(buffer);
+
+            // 다음 읽기를 위해 버퍼를 clear 한다.
+            buffer.clear();
+
+        } catch (IOException e) {
+            System.out.println("Client error: " + e.getMessage());
+
+            // 클라이언트가 비정상 종료했을 때
+            try {
+                client.close();
+            } catch (IOException ignored) {
+            }
+        }
+    }
+}
+```
 
 ---
 **Reference**<br>
 - https://jenkov.com/tutorials/java-nio/overview.html
 - https://engineering.linecorp.com/ko/blog/do-not-block-the-event-loop-part2
 - https://brewagebear.github.io/fundamental-nio-and-io-models/
+- https://www.geeksforgeeks.org/java/java-nio-channels-selector-class-in-java/?utm_source=chatgpt.com
+
