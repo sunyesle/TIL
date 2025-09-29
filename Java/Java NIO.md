@@ -65,7 +65,8 @@ Chennel은 Stream과 유사하지만 몇 가지 차이점이 있다.
 | `DatagramChannel`     | `OP_READ`, `OP_WRITE`               |
 
 ## 예시
-Java NIO를 활용한 멀티플렉싱 기반의 다중 접속 서버이다.
+Java NIO를 활용한 멀티플렉싱 기반의 다중 접속 서버이다.<br>
+간단한 에코 서버로 클라이언트의 메시지를 그대로 되돌려준다.
 
 ```java
 public class NIOEchoServer {
@@ -84,9 +85,9 @@ public class NIOEchoServer {
         // 셀렉터에 채널을 등록한다. 연결 수락 이벤트를 감지하도록 한다.
         serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
-        ByteBuffer buffer = ByteBuffer.allocate(256);
         System.out.println("Server started on port 8080");
 
+        ByteBuffer buffer = ByteBuffer.allocate(256);
         while (true) {
             // 하나 이상의 채널이 준비될 때까지 블록한다.
             selector.select();
@@ -154,6 +155,35 @@ public class NIOEchoServer {
             try {
                 client.close();
             } catch (IOException ignored) {
+            }
+        }
+    }
+}
+```
+
+테스트용 클라이언트.<br>
+서버에 연결해서 사용자가 입력한 메시지를 전송하고, 서버로부터 되돌아온 메시지를 출력한다.
+```java
+public class EchoClient {
+    public static void main(String[] args) throws IOException {
+        try (Socket socket = new Socket("localhost", 8080);
+             BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
+             BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+            System.out.println("Connected to server.");
+
+            String msg;
+            while ((msg = input.readLine()) != null) {
+                out.write(msg + "\n");
+                out.flush();
+
+                String response = in.readLine();
+                System.out.println("Server echoed: " + response);
+
+                if ("EXIT".equalsIgnoreCase(msg)) {
+                    break;
+                }
             }
         }
     }
