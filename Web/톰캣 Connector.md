@@ -81,10 +81,32 @@ Processor에서 생성한 요청 객체를 서블릿 컨테이너로 전달하�
 | **SSL Handshake**                   | Blocking                    | Non blocking           | Non blocking             | Blocking                 |
 | **Max Connections**                 | maxConnections              | maxConnections         | maxConnections           | maxConnections           |
 
+## BIO Connector
+<img width="606" height="470" alt="bio connector" src="https://github.com/user-attachments/assets/43ed40c9-50c9-4b87-abbd-2efb944b8687" />
+
+BIO Connector는 Tomcat 9부터는 Deprecated 되었다.
+
+BIO Connector는 소켓 연결마다 전용 스레드가 할당되는 방식으로 동작한다.
+요청이 들어오면 스레드 풀이 관리하는 스레드중 하나가 커넥션을 맡아 처리하고, 응답 후 연결이 종료될 때까지 그 커넥션에 고정된다.
+
+즉, 연결이 유지되는 동안 스레드는 다른 작업을 수행할 수 없는 **블로킹** 방식으로 동작하며, 연결이 종료되면 스레드풀로 다시 반환된다.
+
+이 방식은 동시 접속 가능한 사용자 수가 스레드 수에 의해 제한된다.
+또한 요청 당 하나의 스레드가 할당되기 때문에 스레드가 idle 상태로 낭비되는 시간이 많아지게 된다.
+
+이러한 문제점을 해결하고, 스레드 자원을 효율적으로 사용하여 대규모 동시 접속을 처리하기 위해 NIO Connector가 등장했다.
+
+## NIO Connector
+<img width="745" height="617" alt="nio connector" src="https://github.com/user-attachments/assets/be2b658d-52ec-4b50-9b7c-5163710a6ff8" />
+
+NIO Connector는 멀티플렉싱 방식으로 동작한다.
+내부적으로 Poller라는 전용 스레드가 Selector를 이용해 여러개의 커넥션을 감시하고, 이벤트가 감지된 커넥션에 대해서만 스레드풀의 스레드에 위임하여 처리한다.
+
+즉, 소켓 연결마다 전용 스레드를 고정하지 않기 때문에 idle 스레드를 줄일 수 있으며, 스레드 수 이상의 연결도 동시에 처리 가능한 **논블로킹** 방식으로 동작한다.
 
 ---
 **Reference**<br>
 - https://velog.io/@jihoson94/BIO-NIO-Connector-in-Tomcat
 - https://dev-ws.tistory.com/96
 - https://tomcat.apache.org/tomcat-8.0-doc/config/http.html#Connector_Comparison
-
+- https://ego2-1.tistory.com/30
