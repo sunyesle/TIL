@@ -28,6 +28,60 @@ JVM의 메모리에서 운영체제의 메모리로 복사할 필요 없이 바�
 따라서, direct 버퍼는 운영체제 수준의 I/O 입출력 작업에 사용되며, 할당과 해제가 빈번하지 않는 경우에 사용하는 것이 좋다.
 일반적으로 측정 가능한 퍼포먼스 이득이 있을 때만 사용하는 것이 좋다.
 
+## ByteBuffer 생성
+```java
+// non-direct 버퍼를 생성한다.
+ByteBuffer buffer = ByteBuffer.allocate(10);
+```
+
+```java
+// direct 버퍼를 생성한다.
+ByteBuffer buffer = ByteBuffer.allocateDirect(10);
+```
+
+```java
+// 기존 바이트 배열을 랩핑하여 버퍼를 생성한다. 배열과 버퍼가 같은 메모리 공간을 공유하게 된다.
+byte[] bytes = new byte[10];
+ByteBuffer buffer = ByteBuffer.wrap(bytes);
+
+// 또는
+ByteBuffer buffer = ByteBuffer.wrap(bytes, 0, bytes.length);
+```
+
+### 속도 비교
+`allcate()`와 `allcateDirect()` 메서드의 속도를 비교해보자.
+```java
+// allcate()
+long start = System.currentTimeMillis();
+
+for (int i = 0; i < 1000000; i++) {
+    ByteBuffer buffer = ByteBuffer.allocate(1024);
+}
+
+long end = System.currentTimeMillis();
+System.out.println("실행 시간(ms) : " + (end - start)); // 실행 시간(ms) : 42
+```
+
+```java
+// allcateDirect()
+long start = System.currentTimeMillis();
+
+for (int i = 0; i < 1000000; i++) {
+    ByteBuffer buffer = ByteBuffer.allocateDirect(1024);
+}
+
+long end = System.currentTimeMillis();
+System.out.println("실행 시간(ms) : " + (end - start)); // 실행 시간(ms) : 782
+```
+`allcate()`에 비해 `allcateDirect()`는 15배 이상 속도 차이가 나는 것을 확인할 수 있다.
+
+direct 버퍼는 생성 비용이 높기 때문에, ByteBuffer를 매번 생성하는 방식은 프로그램 성능에 영향을 줄 수 있다.<br>
+따라서, 버퍼 풀(Buffer Pool)을 통해 재활용하는 것이 좋다.
+
 ---
 **Reference**
 - https://docs.oracle.com/javase/8/docs/api/java/nio/ByteBuffer.html
+- https://junhyunny.github.io/java/jvm/direct-memory-in-java/
+- https://px201226.github.io/java-nio-buffer/
+- http://eincs.com/2009/08/java-nio-bytebuffer-channel-file/
+
