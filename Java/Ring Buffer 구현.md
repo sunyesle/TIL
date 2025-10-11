@@ -10,6 +10,10 @@
 
 <img width="437" height="144" alt="ring-buffer-2" src="https://github.com/user-attachments/assets/70f58e2c-b47f-465b-b322-1232ac1b0e70" />
 
+### 장점
+- **빠른 속도**: 읽기와 쓰기 연산이 모두 O(1)로 동작한다.
+- **메모리 효율성**: 고정된 크기의 배열을 재사용하므로 GC 부하가 거의 없다.
+
 ## 구현 방식
 아래 구현에서는 다음 세가지 정보를 관리하는 방식을 사용했다.
 - `readPos`: 읽기 위치
