@@ -67,6 +67,14 @@ public class RingBuffer {
     public boolean isFull() {
         return flipped && writePos == readPos;
     }
+
+    public int size() {
+        if (!flipped) {
+            return writePos - readPos;
+        } else {
+            return capacity - (readPos - writePos);
+        }
+    }
 }
 ```
 
