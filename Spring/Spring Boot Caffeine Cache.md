@@ -15,11 +15,106 @@
 스프링은 캐시 추상화를 제공한다.
 스프링 AOP 기반으로 캐시가 동작하며, 어노테이션으로 간편하게 캐싱을 적용할 수 있다.
 
-### 의존성 추가
+지원되는 캐시 구현체는 Ehcache, Caffeine, Cache2k, Redis 등이 있으며,
+해당 캐시 구현체들은 Auto-configuration을 통해 설정 파일(yml) 기반으로 설정 가능하다.
+
+예제에서는 캐시 구현체로 **Caffeine**을 사용한다.
+
+## 의존성 추가
 ```gradle
 implementation 'org.springframework.boot:spring-boot-starter-cache'
 implementation 'com.github.ben-manes.caffeine:caffeine'
 ```
+
+## CacheManager 설정
+### 1. application.yml
+Auto-configuration을 통해 설정한다. `CaffeineCacheManager`가 자동으로 등록된다.<br>
+간단한 캐시 정책을 적용하는 경우 적합하다.
+```yml
+spring:
+  cache:
+    cache-names: "products,product-list"
+    caffeine:
+      spec: "maximumSize=1000,expireAfterWrite=600s"
+```
+### 2. Java Config
+명시적으로 `CacheManager` 빈을 선언한다.<br>
+세밀한 설정이 필요한 경우 적합하다.
+```java
+@Bean
+public CacheManager cacheManager() {
+    CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+    cacheManager.setCacheNames(List.of("products", "product-list"));
+    cacheManager.setCaffeine(
+            Caffeine.newBuilder()
+                    .expireAfterWrite(600, TimeUnit.SECONDS)
+                    .maximumSize(1000)
+    );
+    return cacheManager;
+}
+```
+
+### 3. Java Config + Enum을 통한 캐시 정책 관리
+캐시 정책이 다양한 경우 유용하다.
+ 
+**CacheType 작성**<br>
+캐시 항목별 세부 설정을 관리하는 Enum이다.
+```java
+@Getter
+public enum CacheType {
+    PRODUCTS("products", 600, 1000),
+    PRODUCT_LIST("product-list", 300, 500);
+
+    CacheType(String cacheName, int expireAfterWrite, int maximumSize) {
+        this.cacheName = cacheName;
+        this.expireAfterWrite = expireAfterWrite;
+        this.maximumSize = maximumSize;
+    }
+
+    private final String cacheName;
+    private final int expireAfterWrite;
+    private final int maximumSize;
+}
+```
+
+**CacheManager 빈 등록**<br>
+위에서 정의한 `CacheType`을 이용해 `CacheManager`빈을 생성한다.
+```java
+@Bean
+public CacheManager cacheManager() {
+    SimpleCacheManager cacheManager = new SimpleCacheManager();
+    // 각 캐시 타입에 대한 설정 적용
+    List<CaffeineCache> caches = Arrays.stream(CacheType.values())
+            .map(cache ->
+                    new CaffeineCache(
+                            cache.getCacheName(),
+                            Caffeine.newBuilder()
+                                    .expireAfterWrite(cache.getExpireAfterWrite(), TimeUnit.SECONDS)
+                                    .maximumSize(cache.getMaximumSize())
+                                    .build()
+                    )
+            )
+            .toList();
+    cacheManager.setCaches(caches);
+    return cacheManager;
+}
+```
+
+### 설정 값
+- **maximumSize**: 캐시 최대 크기
+- **maximumWeight**: 캐시 최대 무게 `Caffeine.newBuilder().maximumWeight(10).weigher((k, v) -> k.toString().length()).build()`
+- **expireAfterAccess**: 항목 읽기/쓰기 이후 일정 시간 지나면 만료시킨다.
+- **expireAfterWrite**: 항목 쓰기 이후 일정 시간 지나면 만료시킨다.
+- **refreshAfterWrite**: 일정 시간이 지나면 백그라운드에서 새로고침한다.
+- **weakKeys**: key가 *WeakReference*로 저장된다. 값을 비교할 때 `equals()` 대신 `==`을 사용한다.
+- **weakValues**: value가 *WeakReference*로 저장된다. 값을 비교할 때 `equals()` 대신 `==`을 사용한다.
+- **softValues**: key가 *SoftReference*로 저장된다. 값을 비교할 때 `equals()` 대신 `==`을 사용한다.
+- **initialCapacity**: 내부 해시 테이블의 최소 크기
+- **recordStats**: 통계 수집
+
+> **WeakReference, SoftReference란?**
+> - `WeakReference`: 객체를 참조하는 곳이 없으면 GC 대상으로 지정된다. 메모리 누수를 방지하는데 유용하다.
+> - `SoftReference`: 객체를 참조하는 곳이 없더라도 메모리가 넉넉하다면 GC 대상이 되지 않는다.
 
 ### 캐싱 기능 활성화
 `@EnableCaching` 어노테이션을 추가해 캐싱 기능을 활성화한다.
@@ -28,48 +123,6 @@ implementation 'com.github.ben-manes.caffeine:caffeine'
 @Configuration
 public class CacheConfig {
 
-}
-```
-
-### CacheType 작성
-캐시 항목별 세부 설정(만료 시간, 최대 크기)을 관리하는 enum이다.
-```java
-@Getter
-public enum CacheType {
-    PRODUCTS("products", 5 * 60, 10000);
-
-    CacheType(String cacheName, int expiredAfterWrite, int maximumSize) {
-        this.cacheName = cacheName;
-        this.expiredAfterWrite = expiredAfterWrite;
-        this.maximumSize = maximumSize;
-    }
-
-    private final String cacheName;
-    private final int expiredAfterWrite;
-    private final int maximumSize;
-}
-```
-
-### CacheManager 빈 등록
-위에서 정의한 `CacheType`을 이용해 `CacheManager`를 생성한다.
-```java
-@EnableCaching
-@Configuration
-public class CacheConfig {
-    @Bean
-    public CacheManager cacheManager() {
-        SimpleCacheManager cacheManager = new SimpleCacheManager();
-        List<CaffeineCache> caches = Arrays.stream(CacheType.values())
-                .map(cache -> new CaffeineCache(cache.getCacheName(), Caffeine.newBuilder()
-                                .expireAfterWrite(cache.getExpiredAfterWrite(), TimeUnit.SECONDS)
-                                .maximumSize(cache.getMaximumSize())
-                                .build()
-                        )
-                )
-                .toList();
-        cacheManager.setCaches(caches);
-        return cacheManager;
-    }
 }
 ```
 
