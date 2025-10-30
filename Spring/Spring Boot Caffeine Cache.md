@@ -116,7 +116,7 @@ public CacheManager cacheManager() {
 > - `WeakReference`: 객체를 참조하는 곳이 없으면 GC 대상으로 지정된다. 메모리 누수를 방지하는데 유용하다.
 > - `SoftReference`: 객체를 참조하는 곳이 없더라도 메모리가 넉넉하다면 GC 대상이 되지 않는다.
 
-### 캐싱 기능 활성화
+## 캐싱 기능 활성화
 `@EnableCaching` 어노테이션을 추가해 캐싱 기능을 활성화한다.
 ```java
 @EnableCaching
@@ -125,49 +125,79 @@ public class CacheConfig {
 
 }
 ```
+## 어노테이션으로 캐싱 사용하기
+- `@Cacheable`: 캐시 저장/조회
+- `@CachePut`: 캐시 저장/갱신
+- `@CacheEvict`: 캐시 제거
+- `@Caching`: 캐시 작업 조합
 
-### 어노테이션으로 캐싱 사용하기
-#### @Cacheable - 캐시 저장/조회
-캐시에 데이터가 없을 경우에는 메서드를 실행한 후 캐시에 데이터를 저장하고, 캐시에 데이터가 있으면 캐시의 데이터를 반환한다.<br>
-```java
-@Cacheable(value = "products", key = "#id")
-public ProductResponse getProduct(Long id) {
-    log.info("getProduct 호출");
-    return productRepository.findById(id).map(ProductResponse::of)
-            .orElseThrow(NoSuchElementException::new);
-}
-```
-
-> SpEL을 사용하여 key, conditional 속성 값을 지정할 수 있다.
+> SpEL을 사용하여 key, conditional 등의 속성 값을 지정할 수 있다.
 자세한 내용은 [공식 문서](https://docs.spring.io/spring-framework/reference/integration/cache/annotations.html#cache-spel-context)에서 확인 가능하다.
 
-| 이름            | 설명                | 예                       |
-|---------------|-------------------|-------------------------|
-| Argument name | 특정 메서드 인수의 이름     | `#id` 또는 `#a0` 또는 `#p0` |
-| result        | 메서드 호출의 결과(캐시할 값) | `#result`               |
+### @Cacheable - 캐시 저장/조회
+캐시에 데이터가 없을 경우에는 메서드를 실행한 후 캐시에 데이터를 저장하고, 캐시에 데이터가 있으면 캐시의 데이터를 반환한다.
+- `value`: =cacheNames
+- `cacheNames`: 캐시 이름
+- `key`: 키 값을 SpEL로 지정한다.
+- `condition`: 캐시를 적용할 조건을 SpEL로 지정한다.
+- `unless`: 캐시에 저장하지 않을 조건을 SpEL로 지정한다.
+- `cacheManager`: CacheManager 지정
+- `sync`: 여러 스레드가 동일한 키에 대한 값을 로드하려고 할 경우, 동기화를 건다. (캐시 라이브러리에 따라 지원하지 않을 수 있다.)
 
-#### @CachePut - 캐시 저장
-항상 메서드를 실행하고 캐시를 저장한다.
 ```java
-@CachePut(value = "products", key = "#result.id")
-public ProductResponse saveProduct(ProductRequest request) {
-    log.info("saveProduct 호출");
-    Product product = request.toEntity();
-    productRepository.save(product);
-    return ProductResponse.of(product);
-}
+@Cacheable("users")
+public User getUser(long userId) {...}
+
+@Cacheable(cacheNames = "users", key = "#root.methodName + '_' + #userId")
+public User getUser(long userId) {...}
+
+@Cacheable(cacheNames = "users", key = "#user.id", condition = "#user.type == 'ADMIN'")
+public User getUser(User user) {...}
+
+@Cacheable(cacheNames="users", key = "#user.id", unless = "#result == null")
+public User getUser(User user) {...}
 ```
 
-#### @CacheEvict - 캐시 제거
+### @CachePut - 캐시 저장/갱신
+항상 메서드를 실행하고 캐시를 저장/갱신한다.
+- `value`: =cacheNames
+- `cacheNames`: 캐시 이름
+- `key`: 키 값을 SpEL로 지정한다.
+- `condition`: 캐시를 적용할 조건을 SpEL로 지정한다.
+- `unless`: 캐시에 저장하지 않을 조건을 SpEL로 지정한다.
+- `cacheManager`: CacheManager 지정
+
+```java
+@CachePut(cacheNames = "users", key = "#result.id")
+public User saveUser(User user) {...}
+```
+
+### @CacheEvict - 캐시 제거
 캐시를 제거한다.
+- `value`: =cacheNames
+- `cacheNames`: 캐시 이름
+- `key`: 키 값을 SpEL로 지정한다.
+- `condition`: 캐시를 적용할 조건을 SpEL로 지정한다.
+- `cacheManager`: CacheManager 지정
+- `allEntries`: 캐시에서 모든 항목을 제거
+- `beforeInvocation`: 메서드 호출 이전(`true`), 메서드 호출 이후(`false`) 캐시 제거. 기본값은 `false`
 ```java
-@CacheEvict(value = "products", key = "#id")
-public void deleteProduct(Long id) {
-    log.info("deleteProduct 실행");
-    productRepository.deleteById(id);
-}
+@CacheEvict(cacheNames = "users", key = "#userId")
+public void deleteUser(long userId) {...}
 ```
 
+### @Caching
+여러 캐시 작업을 조합할 수 있도록 한다.
+- `cacheable`: 적용 될 `@Cacheable` 배열
+- `evict`: 적용 될 `@CacheEvict` 배열
+- `put`: 적용 될 `@CachePut` 배열
+```java
+@Caching(
+    put = {@CachePut(cacheNames = "users", key = "#result.id")},
+    evict = {@CacheEvict(cacheNames = "userList", allEntries = true)}
+)
+public User saveUser(User user) {...}
+```
 ---
 **Reference**<br>
 - https://docs.spring.io/spring-framework/reference/integration/cache/annotations.html
