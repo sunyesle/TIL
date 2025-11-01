@@ -96,3 +96,5 @@ System.out.println(queue.poll()); // java.lang.ref.PhantomReference@4517d9a3
 **Reference**
 - https://jonghoonpark.com/2024/05/05/java-reference-type
 - https://liltdevs.tistory.com/182
+- https://docs.oracle.com/en/java/javase/25/docs/api//java.base/java/lang/ref/package-summary.html
+- https://d2.naver.com/helloworld/329631
