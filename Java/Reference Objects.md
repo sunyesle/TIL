@@ -1,4 +1,28 @@
 # Reference Objects
+Reference Objects는 객체의 참조 자체를 캡슐화하여, 다른 객체처럼 검사하고 조작할 수 있도록 한다.
+
+`java.lang.ref` 패키지는 soft, weak, phantom 세 가지 참조 방식을 각각의 `Reference` 클래스로 제공한다.
+
+## Reachability
+GC는 객체가 가비지인지 아닌지 판별하기 위해 reachability라는 개념을 사용한다.
+
+아래로 갈수록 참조가 약해진다.
+- **strongly reachable**
+  - strong reference로부터 접근 가능한 상태.
+  - GC 수집 대상이 아니다.
+- **softly reachable**
+  - strong reachable이 아니고, soft reference를 통해 접근 가능한 상태.
+  - 메모리가 부족할 때만 GC 수집 대상이 된다. (일반적으로 weakly reachable 객체보다 오래 살아남는다.)
+- **weakly reachable**
+  - strongly/softly reachable이 아니고, weak reference를 통해 접근 가능한 상태.
+  - GC 수행 시 항상 수집 대상이 된다.
+- **phantomly reachable**
+  - strongly/softly/weakly reachable이 아니고, finalize()가 완료 된 후, phantom reference를 통해 접근 가능한 상태.
+  - ReferenceQueue를 통해 객체가 실제 메모리에서 해제되기 직전의 상태를 감지하기 위해 사용된다.
+- **unreachable**
+  - 어떤 방식으로 접근 불가능한 상태.
+  - GC 수행 시 수집 대상이 된다.
+
 ## StrongReference
 기본적인 참조 타입이다.
 `StrongRefence`가 있는 객체는 GC 대상이 되지 않는다.
