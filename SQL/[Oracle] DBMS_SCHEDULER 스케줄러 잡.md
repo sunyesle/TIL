@@ -61,6 +61,27 @@ BEGIN
 END;
 ```
 
+## 잡 실행
+```sql
+BEGIN
+    DBMS_SCHEDULER.RUN_JOB('MY_JOB');
+END;
+```
+
+## 잡 삭제
+```sql
+BEGIN
+DBMS_SCHEDULER.DROP_JOB (
+    job_name => 'MY_JOB',
+    force    => FALSE,
+    defer    => FALSE
+);
+END;
+```
+- **job_name**: 잡 이름
+- **force**: TRUE로 설정하면 실행되고 있는 잡을 중단시키고 잡을 삭제. 기본값은 FALSE
+- **defer**: TRUE로 설정하면 수행되고 있는 잡이 완료된 후 잡을 삭제. 기본값은 FALSE
+
 <br>
 
 > **테스트용 테이블 & 프로시저**
