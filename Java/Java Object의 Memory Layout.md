@@ -3,6 +3,35 @@
 
 이 글에서는 HotSpot JVM 구현을 기준으로 JVM이 힙에 객체와 배열을 어떻게 저장하는지 알아보려고 한다.
 
+## OOP
+JVM은 객체를 가리키기 위해 위해 Ordinary Object Pointer(OOP)라는 데이터 구조를 사용한다.
+
+HotSpot 내부에서는 다음과 같이 정의되어 있다.
+```hpp
+class oopDesc {
+  friend class VMStructs;
+  friend class JVMCIVMStructs;
+ private:
+  volatile markWord _mark;
+  union _metadata {
+    Klass*      _klass;
+    narrowKlass _compressed_klass;
+  } _metadata;
+```
+[`oopDesc`](https://github.com/openjdk/jdk21/blob/890adb6410dab4606a4f26a942aed02fb2f55387/src/hotspot/share/oops/oop.hpp#L52)는 C++로 작성되어 있으며,
+객체 헤더의 정의를 포함하고 있다.
+
+`oopDesc`는 두 가지 주요 필드(객체 헤더)로 구성되어 있다.
+- `mark word`: 객체별 메타데이터
+- `klass word`: 클래스 메타데이터 포인터
+
+모든 객체는 모두 `oopDesc`라는 클래스를 기반으로 한다.
+- [`instanceOopDesc`](https://github.com/openjdk/jdk21/blob/master/src/hotspot/share/oops/instanceOop.hpp): 단일 객체
+- [`arrayOopDesc`](https://github.com/openjdk/jdk21/blob/master/src/hotspot/share/oops/arrayOop.hpp): 배열 객체
+
+## 객체의 메모리 레이아웃
+<img width="700" height="324" alt="img (1)" src="https://github.com/user-attachments/assets/7f82730f-5e4f-498c-b2ad-69334dafac5a" />
+
 ### 마크 워드 (mark word)
 마크 워드는 데이터를 담고 있는 bit field로, 객체 별로 고유하게 관리되는 메타데이터가 저장된다.
 - Lock 정보: 경량 락, 모니터 락 등 동기화 상태
@@ -38,3 +67,4 @@ JVM은 객체를 8byte 경계에 맞게 정렬하려고 하며, 이를 위해 �
 **Reference**
 - https://mangkyu.tistory.com/448
 - https://medium.com/@AlexanderObregon/where-object-headers-are-stored-and-what-they-contain-in-java-memory-5002b9fb6ee4
+- https://leeyh0216.github.io/posts/trino-slice/
