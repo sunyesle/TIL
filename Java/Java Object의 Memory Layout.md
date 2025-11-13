@@ -76,8 +76,45 @@ class oopDesc {
 - 8바이트 경계에 맟추기 위해, 필드 사이에 패딩을 삽입한다.
 - 객체 전체 크기가 8바이트의 정수배가 되도록, 마지막에 패딩을 삽입한다.
 
+## 동적으로 변하는 마크 워드
+객체 헤더는 객체 생성 이후 고정되는 것이 아니라, JVM의 동작에 따라 변경된다.
+동기화, 가비지 컬렉션 등에 의해 마크 워드가 변경될 수 있다.
+
+다음과 같이 헤더의 마지막 2비트 값에 따라 의미가 달라진다.
+
+| 주요 정보 저장 영역                   | Lock bits | Lock State       | 의미                    |
+|-------------------------------|----------|------------------|-----------------------|
+| 해시코드, GC용 age             | 01       | Unlocked         | 락 없음                 |
+| 경량 락 포인터(스레드 스택의 Lock Record) | 00       | Lightweight Lock | 경량 락          |
+| 중량 락 포인터(모니터 객체 주소)           | 10       | Heavyweight Lock | 중량 락 |
+| 포워딩 포인터                 | 11       | GC Flag          | GC 관련 플래그             |
+
+### synchronized
+`synchronized`가 사용될 때, JVM은 어떤 스레드가 잠금을 가지고 있는지 추적해야 한다.
+이때 최적화를 위해 **경량 락** → **중량 락**으로 계층화된 락 매커니즘을 제공한다.
+
+#### 1. Unlocked
+객체 헤더의 마지막 2비트(Lock bits)가 `01`일 경우 락이 걸려있지 않은 상태이다.
+이때 마크 워드에는 `객체의 해시코드, GC age 등 메타데이터`가 저장되어 있다.
+
+#### 2. 경량 락(Lightweight Lock)
+락이 없는 상태에서 `synchronized` 블록에 진입하면 JVM은 경량 락을 시도한다.
+1. 현재 스레드의 스택 프레임에 `Lock Record`를 생성한다. `Lock Record`에는 잠금을 걸 객체의 원래 마크 워드 값을 복사해 둔다.
+2. CAS(Compare-And-Swap) 연산을 통해 객체의 마크 워드를 `Lock Record의 포인터 + 00 (Lock bits)`로 변경하려고 시도한다.
+
+만약 변경에 성공하면 현재 스레드가 락을 획득하게 된다, 실패했다면 다른 스레드가 이미 동일 객체를 잠그려고 했다는 것을 의미한다.
+
+#### 3. 중량 락(Heavyweight Lock)
+경량 락 획득에 실패하면, JVM은 잠시 스핀(Spin)을 돌면서 락이 풀리길 기다린다. 스핀 중에도 락이 해제되지 않으면, 중량 락으로 전환된다.
+
+JVM은 `ObjectMonitor` 객체를 생성하고, 마크 워드를 `ObjectMonitor 객체의 포인터 + 10 (lock bits)`로 교체한다.
+이후에는 OS 수준의 모니터(커널 mutex)로 락을 관리한다.
+
 ---
 **Reference**
 - https://mangkyu.tistory.com/448
 - https://medium.com/@AlexanderObregon/where-object-headers-are-stored-and-what-they-contain-in-java-memory-5002b9fb6ee4
 - https://leeyh0216.github.io/posts/trino-slice/
+- https://medium.com/@AlexanderObregon/where-object-headers-are-stored-and-what-they-contain-in-java-memory-5002b9fb6ee4
+- https://velog.io/@aplbly/JAVA-%EB%B0%94%EC%9D%B4%ED%8A%B8%EC%BD%94%EB%93%9C
+- https://velog.io/@tlarbals824/Deep-Dive-into-Synchronized-Biased-lock-Lightweight-lock-heavyweight-lock
