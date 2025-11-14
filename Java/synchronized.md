@@ -11,7 +11,7 @@ Java의 **모든 객체**(**인스턴스, 클래스**)는 내부적으로 락을
 > 모든 자바 객체는 헤더라는 메타데이터를 포함하고 있다. 객체 헤더에는 JVM이 객체를 관리하는 데에 필요한 정보가 저장된다. 이중 Mark Word 부분에 락 정보를 담고 있다.<br>
 > int, long 같은 원시 타입은 객체가 아니기 때문에 `synchronized` 키워드를 사용할 수 없다.
 > 
-> <img width="600" alt="Image" src="https://github.com/user-attachments/assets/29f70e0e-768a-4248-a1f2-e420078b378b" />
+> <img width="700" alt="object_memory_layout" src="https://github.com/user-attachments/assets/4290e3dc-8a3f-4fb8-8e0e-c25e7d4b8a0d" />
 
 ## synchronized 키워드
 `synchronized` 키워드를 사용하여 블록 단위로 락을 획득하고 해제할 수 있으며, 이를 통해 스레드 간의 동기화를 구현할 수 있다.
