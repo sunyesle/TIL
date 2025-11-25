@@ -33,6 +33,9 @@ locale
 # Locale 목록을 확인한다.
 locale -a
 
+# 생성 가능한 Locale을 확인한다.
+cat /usr/share/i18n/SUPPORTED | grep ko_KR
+
 # Locale을 생성한다.
 sudo locale-gen ko_KR.UTF-8
 
@@ -87,3 +90,66 @@ num  target     prot opt source               destination
 # 재부팅해도 유지되도록 저장
 sudo netfilter-persistent save
 ```
+
+## Swap 메모리 설정
+Oracle Cloud 무료 인스턴스의 가용 메모리는 1GB이다.
+메모리 부족으로 인한 문제를 방지하기 위해 스왑 메모리를 설정해 주자.
+```bash
+# 메모리를 확인한다.
+free -m
+               total        used        free      shared  buff/cache   available
+Mem:             956         397         196           5         539         559
+Swap:              0           0           0
+
+# 스왑 영역을 확인한다. (스왑 영역이 없으므로 아무것도 출력되지 않는다.)
+swapon -s
+```
+다음과 같이 스왑 메모리를 설정할 수 있다.
+```bash
+# 더미 파일을 생성한다.
+sudo fallocate -l 4GB /swapfile
+
+# 권한을 조정한다.
+sudo chmod 600 /swapfile
+
+# 스왑 파일을 스왑 영역으로 지정한다.
+sudo mkswap /swapfile
+
+# 스왑 파일을 활성화 시킨다.
+sudo swapon /swapfile
+```
+
+설정 후 다시 메모리와 스왑 영역을 확인해 보자.
+```bash
+free -m
+               total        used        free      shared  buff/cache   available
+Mem:             956         379         374           4         355         577
+Swap:           3814           0        3814
+
+swapon -s
+Filename                                Type            Size            Used            Priority
+/swapfile                               file            3906244         0               -2
+```
+
+재부팅 시 스왑 메모리 설정이 초기화된다. `/etc/fstab` 파일에 스왑 항목을 등록하면, 부팅할 때 자동으로 스왑이 활성화된다.
+
+> `/etc/fstab`: 리눅스 부팅 시 마운트 정보를 저장하고 있는 파일
+
+```bash
+# nano 에디터로 파일을 수정한다.
+sudo nano /etc/fstab
+
+# 파일의 최하단에 다음 내용을 추가한다. 이후 Ctrl+O(저장), Ctrl+X(나가기)
+/swapfile       none    swap    sw      0       0
+
+# 파일 내용을 확인한다.
+cat /etc/fstab
+
+LABEL=cloudimg-rootfs   /        ext4   discard,commit=30,errors=remount-ro     0 1
+LABEL=BOOT      /boot   ext4    defaults        0 2
+LABEL=UEFI      /boot/efi       vfat    umask=0077      0 1
+/swapfile       none    swap    sw      0       0
+```
+---
+**Reference**
+- Locale 설정: https://www.44bits.io/ko/post/setup_linux_locale_on_ubuntu_and_debian_container
