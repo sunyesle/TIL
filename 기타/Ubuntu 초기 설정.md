@@ -47,7 +47,7 @@ sudo update-locale LANG=ko_KR.UTF-8
 ## 방화벽 설정
 ```bash
 # 적용된 규칙 목록을 확인한다.
-sudo iptables -L
+sudo iptables -L --line-numbers
 
 Chain INPUT (policy ACCEPT)
 num  target     prot opt source               destination
@@ -71,7 +71,7 @@ sudo iptables -I INPUT 5 -m state --state NEW -p tcp --dport 443 -j ACCEPT
 
 규칙 추가 후 적용된 내용을 확인해보자.
 ```bash
-sudo iptables -L
+sudo iptables -L --line-numbers
 
 Chain INPUT (policy ACCEPT)
 num  target     prot opt source               destination
