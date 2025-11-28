@@ -150,6 +150,47 @@ LABEL=BOOT      /boot   ext4    defaults        0 2
 LABEL=UEFI      /boot/efi       vfat    umask=0077      0 1
 /swapfile       none    swap    sw      0       0
 ```
+
+## Nginx 설정
+```bash
+# Nginx를 설치한다.
+sudo apt install nginx -y
+
+# Nginx 버전을 확인한다.
+nginx -v
+
+# 사이트 설정 파일을 생성한다.
+sudo nano /etc/nginx/sites-available/app.conf
+
+# ---------------------------
+# app.conf 내용 예시
+# ---------------------------
+server {
+    listen 80;
+    server_name [도메인 또는 IP];
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# 사이트 설정을 활성화한다. (available → enabled 심볼릭 링크 생성)
+sudo ln -s /etc/nginx/sites-available/app.conf /etc/nginx/sites-enabled/
+
+# 설정을 테스트한다.
+sudo nginx -t
+
+# Nginx를 재시작한다.
+sudo systemctl restart nginx
+
+# Nginx 상태를 확인한다.
+sudo service nginx status
+```
+
 ---
 **Reference**
 - Locale 설정: https://www.44bits.io/ko/post/setup_linux_locale_on_ubuntu_and_debian_container
