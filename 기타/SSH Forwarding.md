@@ -44,6 +44,8 @@ ssh-add -D
 
 ## 예시
 `로컬 PC → 웹 서버 → DB 서버`로 접속하는 예시이다.
+
+### 1. 명령어만을 사용한 방식
 ```bash
 eval $(ssh-agent)
 ssh-add ~/.ssh/ssh-key-web.key
@@ -53,6 +55,27 @@ ssh -A -J ubuntu@<웹 서버 public IP> ubuntu@<DB 서버 private IP>
 ```
 - `-A`: SSH Agent Forwarding 활성화
 - `-J ubuntu@<웹 서버 public IP>`: ProxyJump 옵션. 웹 서버를 중간 서버로 사용
+
+### 2. SSH Config 파일을 활용한 방식
+`~/.ssh/config` 파일을 사용하면 매번 긴 명령어를 입력할 필요 없이 간편하게 서버에 접속할 수 있다.
+
+```
+Host web
+  HostName <웹 서버 public IP>
+  User ubuntu
+  IdentityFile ~/.ssh/ssh-key-web.key
+  ForwardAgent yes
+
+Host db
+  HostName <DB 서버 private IP>
+  User ubuntu
+  IdentityFile ~/.ssh/ssh-key-db.key
+  ProxyJump web
+```
+위와 같이 설정 파일을 작성하면 다음 명령어만으로 DB 서버에 접속할 수 있다.
+```
+ssh db
+```
 
 ---
 **Reference**
