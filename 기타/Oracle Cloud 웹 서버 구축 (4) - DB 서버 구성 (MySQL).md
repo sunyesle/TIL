@@ -69,10 +69,23 @@ rm ~/pkg/*.deb
 ```
 
 ## MySQL 설정
+### 설정 파일 수정
 ```bash
-# 외부 접속 설정. bind-address = 0.0.0.0 으로 수정한다.
+# 설정 파일을 수정한다.
 sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+```
 
+`mysqld.cnf` 파일의 변경 사항은 다음 두 가지이다.
+- **외부 접속 설정**: `bind-address = 0.0.0.0` 으로 수정한다.
+- **타임존 설정**(**UTC**): `default-time-zone = '+00:00'` 을 추가한다.
+
+```bash
+# 설정 변경사항 적용을 위해 mysql을 재시작한다.
+sudo systemctl restart mysql
+```
+
+### 데이터베이스 생성, 계정 생성, 권한 설정
+```sql
 # MySQL에 root 계정으로 접속한다.
 sudo mysql -u root
 
@@ -82,14 +95,20 @@ CREATE DATABASE mydb;
 # 웹 서버에서 접속 가능한 testuser 계정을 생성한다.
 CREATE USER 'testuser'@'<웹 서버 private IP>' IDENTIFIED BY 'password1111';
 
-# 사용자 확인
-SELECT user, host FROM mysql.user;
-
 # testuser 계정에게 mydb 데이터베이스에 대한 모든 권한을 부여한다.
 GRANT ALL PRIVILEGES ON mydb.* TO 'testuser'@'<웹 서버 private IP>';
 
 # 권한 설정을 반영한다.
 FLUSH PRIVILEGES;
+```
+
+설정한 내용이 반영되었는지 확인한다.
+```sql
+# 타임존 확인
+SELECT @@system_time_zone, @@global.time_zone, @@session.time_zone;
+
+# 사용자 확인
+SELECT user, host FROM mysql.user;
 
 # 권한 확인
 SHOW GRANTS FOR 'testuser'@'<웹 서버 private IP>';
