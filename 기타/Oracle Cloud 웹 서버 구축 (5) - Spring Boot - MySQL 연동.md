@@ -50,6 +50,20 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+  jpa:
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC # UTC 기준으로 변환해 DB에 저장한다.
+```
+
+**타임존 설정**<br>
+애플리케이션 내부에서 처리되는 시간은 Asia/Seoul이다. 메인 함수에 타임존 설정을 추가한다.
+```java
+public static void main(String[] args) {
+    TimeZone.setDefault(TimeZone.getTimeZone("GMT+09:00"));
+    SpringApplication.run(DemoApplication.class, args);
+}
 ```
 
 **JPA Auditing 활성화**
@@ -152,7 +166,7 @@ CREATE TABLE post (
   id BIGINT NOT NULL AUTO_INCREMENT,
   title VARCHAR(100) NOT NULL,
   content VARCHAR(3000) NOT NULL,
-  created_at TIMESTAMP(6) NOT NULL,
+  created_at DATETIME NOT NULL,
   PRIMARY KEY (id)
 )
 ```
@@ -161,7 +175,7 @@ CREATE TABLE post (
 `start.sh` 스크립트에 다음 내용을 추가한다.
 ```bash
 # 환경변수 설정
-export DB_URL="jdbc:mysql://<DB 서버 private IP>:3306/mydb?serverTimezone=Asia/Seoul"
+export DB_URL="jdbc:mysql://<DB 서버 private IP>:3306/mydb"
 export DB_USERNAME="testuser"
 export DB_PASSWORD="password1111"
 ```
