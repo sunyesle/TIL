@@ -1,4 +1,4 @@
-# DBeaver SSH 연결
+# SSH 터널링으로 DB 접속하기 (DBeaver)
 
 다음과 같은 흐름으로 DB에 연결한다.
 ```
