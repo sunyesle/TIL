@@ -278,3 +278,46 @@ while (( ${cnt} < 10 )); do
     cnt=$(( ${cnt}+1 ))
 done
 ```
+
+## 함수
+```bash
+# 선언
+function test_func() {
+    echo "hello"
+}
+
+# function은 생략해도 된다.
+test_func2() {
+    echo "world"
+}
+
+# 호출
+test_func
+test_func2
+```
+
+### 지역 변수
+기본적으로 전역변수로 선언되며, 함수 내에서 `local`을 붙여서 지역변수를 선언할 수 있다.
+```bash
+# 전역변수 선언
+name="a"
+echo ${name} # 결과: a
+
+var_test() {
+    # 같은 이름으로 지역변수 선언. local이 없으면 전역 변수를 수정한다.
+    local name="b"
+    echo ${name}
+}
+
+var_test # 결과: b
+
+# 지역변수를 사용했으므로 전역변수에는 영향이 없다.
+echo ${name} # 결과: a
+```
+
+## eval
+스크립트 중간에 명령어나 다른 파일을 실행시킬 수 있다.
+```bash
+eval "ls -al"
+eval "./test.sh"
+```
