@@ -131,6 +131,17 @@ public class NonProxyTest {
 | `@Bean` 메서드 직접 호출      | 컨테이너 빈 반환     | 새 인스턴스 생성          |
 | 의존성 주입 (파라미터 주입 등) | 컨테이너 빈 주입     | 컨테이너 빈 주입          |
 
+## proxyBeanMethods = false를 사용하는 이유
+Spring Boot 및 라이브러리 코드에서 `proxyBeanMethods = false` 설정을 자주 볼 수 있다.
+
+가장 큰 이유는 성능 최적화 때문이다.
+
+관련 [JavaDoc](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/annotation/Configuration.html#proxyBeanMethods())을 보면,
+메서드 안에서 다른 `@Bean` 메서드를 직접 호출하지 않는 구조라면 `false`로 설정하는 것을 권장하고 있다.
+이는 불필요한 프록시 객체를 생성을 생략하여, 애플리케이션 시작 속도와 메모리 사용량을 최적화 할 수 있다. 
+
 ---
 **Reference**
 - https://www.danvega.dev/blog/spring-proxy-bean-methods
+- https://stackoverflow.com/questions/78000577/why-use-configurationproxybeanmethods-false-on-spring-configuration/78000641
+- https://github.com/spring-projects/spring-boot/issues/9068
