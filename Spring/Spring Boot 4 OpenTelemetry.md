@@ -147,6 +147,31 @@ class InstallOpenTelemetryAppender implements InitializingBean {
 }
 ```
 
+## Micrometer Observation 사용하기
+`@Observed`와 같은 observability 어노테이션 스캔을 활성화하려면 다음 작업이 필요하다.
+
+### 속성 설정
+```properties
+management.observations.annotations.enabled=true
+```
+
+### AOP 의존성 추가
+```gradle
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-aspectj'
+    testImplementation 'org.springframework.boot:spring-boot-starter-aspectj-test'
+}
+```
+
+다음과 같이 어노테이션을 사용할 수 있다.
+```java
+@Observed(name = "user.find-with-id")
+@Transactional(readOnly = true)
+public User findWithId(@ObservationKeyValue("user.id") long id) {
+    return userRepository.findById(id).orElse(null);
+}
+```
+
 ---
 **Reference**
 - https://spring.io/blog/2025/11/18/opentelemetry-with-spring-boot
