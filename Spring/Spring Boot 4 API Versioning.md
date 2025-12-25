@@ -1,4 +1,4 @@
-# Spring Boot API Versioning
+# Spring Boot 4 API Versioning
 Spring Framework 7, Spring Boot 4부터 API 버전 관리 기능을 공식적으로 지원한다.
 이를 통해 애플리케이션 전체에 일관된 버저닝 방식을 설정할 수 있다. 
 

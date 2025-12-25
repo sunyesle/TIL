@@ -1,4 +1,4 @@
-# Spring Boot OpenTelemetry
+# Spring Boot 4 OpenTelemetry
 > 이 글은 Spring Boot 4.0.1 기준으로 작성되었다.
 
 Spring Boot 4에 `spring-boot-starter-opentelemetry` 스타터가 추가되었다.
