@@ -172,6 +172,64 @@ public User findWithId(@ObservationKeyValue("user.id") long id) {
 }
 ```
 
+## Trace ID 헤더에 추가하기
+Micrometer Tracing이 클래스패스에 있으면, Spring Boot는 로그 메시지에 trace ID와 span ID를 포함하도록 로그 패턴을 조정한다. 이는 특정 트레이스와 관련된 로그를 찾을 때 유용하다.
+
+서버가 응답을 보낼 때 HTTP 헤더에 Trace ID를 포함시키면 장애 원인 파악과 대응 시간을 단축시킬 수 있다.
+사용자가 에러를 겪었을 때 Trace ID를 알려주는 것만으로도, 해당 요청에 대한 모든 기록을 추적하여 원인을 파악할 수 있다.
+
+다음 서블릿 필터를 사용하여 Trace ID를 응답 헤더에 추가할 수 있다.
+```java
+@Component
+class TraceIdFilter extends OncePerRequestFilter {
+    private final Tracer tracer;
+
+    TraceIdFilter(Tracer tracer) {
+        this.tracer = tracer;
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String traceId = getTraceId();
+        if (traceId != null) {
+            response.setHeader("X-Trace-Id", traceId);
+        }
+        filterChain.doFilter(request, response);
+    }
+
+    private @Nullable String getTraceId() {
+        TraceContext context = this.tracer.currentTraceContext().context();
+        return context != null ? context.traceId() : null;
+    }
+}
+```
+
+## 비동기 작업 시 컨텍스트가 유실되는 문제 해결
+`@Async`나 `AsyncTaskExecutor`를 사용하여 새로운 스레드에서 작업을 수행하면, 기존 스레드가 가지고 있던 Trace ID나 Span ID 같은 컨텍스트 정보가 유실된다.
+
+트레이스 정보는 `ThreadLocal`에 보관되는데 이 `ThreadLocal`이 새 스레드로 전달되지 않기 때문에 발생하는 문제다.
+
+`ContextPropagatingTaskDecorator` 빈을 등록하는 것만으로 해결할 수 있다.
+이는 Micrometer의 Context Propagation API를 사용하여, 현재 스레드의 컨텍스트를 비동기 스레드로 복제해 주는 역할을 한다.
+```java
+@Configuration(proxyBeanMethods = false)
+public class ContextPropagationConfiguration {
+
+    @Bean
+    ContextPropagatingTaskDecorator contextPropagatingTaskDecorator() {
+        return new ContextPropagatingTaskDecorator();
+    }
+}
+```
+
+## HTTP 클라이언트 사용 시 주의사항
+`RestTemplate`, `RestClient`, `WebClient`를 직접 `new` 키워드로 생성하면 안된다.
+
+대신 `RestTemplateBuilder`, `RestClient.Builder`, `WebClient.Builder` 주입받고 이를 사용해 클라이언트를 생성해야 한다.
+
+스프링 부트가 미리 구성해 둔 빌더는 요청 헤더에 트레이스 컨텍스트가 자동으로 포함되도록 설정되어 있다.
+클라이언트를 직접 생성하면 이러한 설정이 적용되지 않아 컨텍스트가 전파되지 않는다.
+
 ---
 **Reference**
 - https://spring.io/blog/2025/11/18/opentelemetry-with-spring-boot
