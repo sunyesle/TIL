@@ -1,6 +1,12 @@
 # CascadeType.REMOVE와 orphanRemoval = true의 차이점
 
-## 공통 예제 코드
+## 요약
+| 상황                 | `CascadeType.REMOVE` | `orphanRemoval = true` |
+|--------------------|---------------------|-----------------------|
+| 부모 삭제              | 자식 삭제               | 자식 삭제                 |
+| 부모와 자식 사이의 연관관계 제거 | 아무 일도 안 함           | 자식 삭제                 |
+
+## 예시
 Parent와 Child 엔티티를 바탕으로 두 개념의 차이점을 알아보자.
 ```java
 @Entity
@@ -223,15 +229,6 @@ delete from child where id=1
 delete from child where id=2
 ```
 부모 엔티티와 자식 엔티티 사이의 연관 관계를 제거하면, 자식 엔티티가 고아 객체로 취급되어 삭제된다.
-
-## 비교
-### 부모 엔티티 삭제
-- `CascadeType.REMOVE` : 자식 엔티티도 함께 삭제된다.
-- `orphanRemoval = true` : 자식 엔티티도 함께 삭제된다.
-
-### 부모 엔티티와 자식 엔티티 사이의 연관관계 제거
-- `CascadeType.REMOVE` : 자식 엔티티의 외래키 값이 NULL로 변경된다.
-- `orphanRemoval = true` : 자식 엔티티도 함께 삭제된다.
 
 ---
 **Reference**<br>
