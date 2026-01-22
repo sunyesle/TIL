@@ -176,7 +176,9 @@ QMember m1 = new QMember("m");
 `select()`와 `from()`의 내용이 동일할 경우 `selectFrom()`으로 축약할 수 있다.
 
 ## 검색 조건
-- `where()`: 파라미터로 여러개의 조건을 받을 수 있다. 각 조건은 **AND**로 결합된다. 파라미터로 전달된 조건 중 **null 값은 무시**되며, 이 특징을 이용해 동적 쿼리를 깔끔하게 작성할 수 있다.
+`where()`
+- 파라미터로 여러 개의 조건을 받을 수 있다. 각 조건은 **AND**로 결합된다.
+- 파라미터로 전달된 조건 중 **null 값은 무시**되며, 이 특징을 이용해 동적 쿼리를 깔끔하게 작성할 수 있다.
 ```java
 List<Member> result = queryFactory
         .selectFrom(member)
@@ -200,27 +202,27 @@ List<Member> result = queryFactory
 
 ### 검색 조건 목록
 ```java
-member.name.eq("member"), // name = 'member'
-member.name.ne("member"), // name != 'member'
+member.name.eq("member"),       // name = 'member'
+member.name.ne("member"),       // name != 'member'
 member.name.eq("member").not(), // name != 'member'
 
-member.name.isNull(), // name is null
+member.name.isNull(),    // name is null
 member.name.isNotNull(), // name is not null
 
-member.age.in(10, 20), // age in (10, 20)
+member.age.in(10, 20),    // age in (10, 20)
 member.age.notIn(10, 20), // age not in (10, 20)
 
 member.age.between(10, 30), // age between 10 and 30
 
 member.age.goe(30), // age >= 30
-member.age.gt(30), // age > 30
+member.age.gt(30),  // age > 30
 member.age.loe(30), // age <= 30
-member.age.lt(30), // age < 30
+member.age.lt(30),  // age < 30
 
-member.name.like("member%"), // name like 'member%'
-member.name.contains("member"), // name like '%member%'
+member.name.like("member%"),      // name like 'member%'
+member.name.contains("member"),   // name like '%member%'
 member.name.startsWith("member"), // name like 'member%'
-member.name.endsWith("member") // name like '%member'
+member.name.endsWith("member")    // name like '%member'
 ```
 
 ## 결과 조회
@@ -248,3 +250,205 @@ Member result = queryFactory
         .selectFrom(member)
         .fetchFirst();
 ```
+
+## 정렬
+- `orderBy()`: 해당 컬럼을 정렬조건에 따라 정렬 (기본값 asc)
+- `asc()`, `desc()`: 정렬 순서
+- `nullsLast()`, `nullsFirst()`: null 데이터 순서
+```java
+List<Member> result = queryFactory
+        .selectFrom(member)
+        .orderBy(
+                member.age.desc(),
+                member.name.asc().nullsFirst()
+        )
+        .fetch();
+```
+
+## 페이징
+- `offset()`: 조회할 데이터의 시작 지점 (0부터 시작)
+- `limit()`: 조회할 데이터 양
+```java
+int offset = 0;
+int limit = 10;
+
+List<Member> content = queryFactory
+        .selectFrom(member)
+        .orderBy(member.name.desc())
+        .offset(offset)
+        .limit(limit)
+        .fetch();
+
+Long count = queryFactory
+        .select(member.count())
+        .from(member)
+        .fetchOne();
+```
+
+## 집계함수
+- `count()`: 행 갯수
+- `sum()`: 합
+- `avg()`: 평균
+- `max()`: 최대
+- `min()`: 최소
+```java
+List<Tuple> result = queryFactory
+        .select(member.count(),
+                member.age.sum(),
+                member.age.avg(),
+                member.age.max(),
+                member.age.min())
+        .from(member)
+        .fetch();
+```
+> `Tuple`은 Querydsl이 제공하는 클래스로 데이터 타입에 관계없이 결과값을 받을 수 있다.<br>
+> 실무에서는 `Tuple` 대신 DTO로 받아 사용하는 것을 권장한다.(뒷 부분에서 다룰 예정)
+
+## 그룹화
+- `groupBy()`: 해당 컬럼을 기준으로 그룹화한다.
+- `having()`: 특정 조건을 만족하는 그룹을 필터링한다.
+```java
+List<Tuple> result = queryFactory
+        .select(member.count(),
+                member.age.sum(),
+                member.age.avg(),
+                member.age.max(),
+                member.age.min())
+        .from(member)
+        .join(member.team, team)
+        .groupBy(team.name)
+        .having(member.age.avg().gt(30))
+        .fetch();
+```
+
+## 조인
+`.join(조인 대상, 별칭)`
+
+### innerJoin()
+```java
+List<Tuple> result = queryFactory
+        .select(member, team)
+        .from(member)
+        .join(member.team, team) // 또는 .innerJoin()
+        .fetch();
+```
+
+### leftJoin()
+```java
+List<Tuple> result = queryFactory
+        .select(member, team)
+        .from(member)
+        .leftJoin(member.team, team)
+        .fetch();
+```
+
+### rightJoin()
+```java
+List<Tuple> result = queryFactory
+        .select(member, team)
+        .from(member)
+        .rightJoin(member.team, team)
+        .fetch();
+```
+
+## 조인 - ON 절
+`on()`은 다음과 같은 상황에 사용한다.
+### 조인 대상을 필터링할 때
+외부 조인 시에는 on 절에 필터링 조건을 넣으면 조인 대상 테이블의 데이터만 걸러지고, 기준 테이블은 유지된다.
+내부 조인 시에는 where 절에서 필터링하는 것과 동일하므로, 가독성을 위해 where을 선호한다.
+```java
+List<Tuple> result = queryFactory
+        .select(member, team)
+        .from(member)
+        .leftJoin(member.team, team).on(team.name.eq("TeamA")) // 외부조인. 특정 조건을 가진 데이터만 조인.
+        .fetch();
+```
+### 연관 관계가 없는 엔티티 간의 조인 (Theta Join)
+```java
+List<Tuple> result = queryFactory
+        .select(member, team)
+        .from(member)
+        .leftJoin(team).on(member.name.eq(team.name))
+        .fetch();
+```
+
+## 조인 - Fetch Join
+SQL 조인을 활용해서 연관된 엔티티 혹은 컬렉션들을 한번에 조회하는 기능이다.
+
+`join()`, `leftJoin()` 등의 조인 기능 뒤에 `fetchJoin()`을 추가하면 된다.
+```java
+List<Member> result = queryFactory
+        .selectFrom(member)
+        .join(member.team, team)
+        .fetchJoin()
+        .fetch();
+```
+
+## 서브쿼리
+`JPAExpressions`을 사용하여 서브쿼리를 작성할 수 있다.
+### 중첩된 서브쿼리(Nested Subquery) : WHERE 절, HAVING 절의 서브쿼리
+```java
+QMember memberSub = new QMember("memberSub");
+
+// eq
+List<Member> result1 = queryFactory
+        .selectFrom(member)
+        .where(member.age.eq(
+                        JPAExpressions
+                                .select(memberSub.age.max())
+                                .from(memberSub)
+                )
+        )
+        .fetch();
+
+// in
+List<Member> result2 = queryFactory
+        .selectFrom(member)
+        .where(member.age.in(
+                        JPAExpressions
+                                .select(memberSub.age)
+                                .from(memberSub)
+                                .where(memberSub.age.gt(10))
+                )
+        )
+        .fetch();
+
+// exists
+List<Member> result3 = queryFactory
+        .selectFrom(member)
+        .where(
+                JPAExpressions
+                        .selectFrom(memberSub)
+                        .where(
+                                memberSub.id.eq(member.id),
+                                memberSub.team.name.eq("TeamA"))
+                        .exists()
+        )
+        .fetch();
+
+```
+
+### 스칼라 서브쿼리(Scalar Subquery) : SELECT 절의 서브쿼리
+```java
+QMember memberSub = new QMember("memberSub");
+
+List<Tuple> result = queryFactory
+        .select(
+                member.name,
+                ExpressionUtils.as(
+                        JPAExpressions
+                                .select(memberSub.age.avg())
+                                .from(memberSub)
+                        , "avg")
+        )
+        .from(member)
+        .fetch();
+```
+
+### 인라인 뷰(Inline View) : FROM 절의 서브쿼리
+Querydsl은 기본적으로 JPQL의 표준 사양을 따르기 때문에 인라인뷰를 지원하지 않는다.
+
+**대안**
+- 서브쿼리를 조인으로 변경한다.
+- 애플리케이션에서 쿼리를 2번으로 나누어 실행한다.
+- Native Query를 사용한다.
