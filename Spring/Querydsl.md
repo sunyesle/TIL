@@ -452,3 +452,239 @@ Querydsl은 기본적으로 JPQL의 표준 사양을 따르기 때문에 인라�
 - 서브쿼리를 조인으로 변경한다.
 - 애플리케이션에서 쿼리를 2번으로 나누어 실행한다.
 - Native Query를 사용한다.
+
+## 중복제거
+`select()`, `selectFrom()`뒤에 `distinct()`를 추가하면 된다.
+```java
+List<String> result = queryFactory
+        .select(member.name).distinct()
+        .from(member)
+        .fetch();
+```
+
+## 함수
+문자열, 숫자, 날짜 타입의 함수들에 대해 알아보기 위해 테스트용 엔티티를 추가하였다.
+```java
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class TestEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String str;
+    private Integer num;
+    private LocalDateTime createdAt;
+
+    public TestEntity(String str, Integer num, LocalDateTime createdAt) {
+        this.str = str;
+        this.num = num;
+        this.createdAt = createdAt;
+    }
+}
+```
+
+### 함수 목록
+```java
+List<Tuple> result = queryFactory
+        .select(
+                testEntity.str.as("member_name"), // 별칭 지정
+
+                testEntity.str.lower(),
+                testEntity.str.upper(),
+                testEntity.str.substring(3, 6),
+                testEntity.str.concat("_").concat(testEntity.num.stringValue()),
+                testEntity.str.trim(),
+                testEntity.str.length(),
+
+                testEntity.num.add(1),
+                testEntity.num.subtract(1),
+                testEntity.num.multiply(2),
+                testEntity.num.divide(2),
+                testEntity.num.mod(10),
+                testEntity.num.abs(),
+                testEntity.num.negate(),
+                testEntity.num.round(),
+                testEntity.num.floor(),
+                testEntity.num.ceil(),
+
+                testEntity.createdAt.year(),
+                testEntity.createdAt.month(),
+                testEntity.createdAt.dayOfMonth(),
+
+                testEntity.str.coalesce("default"), // name이 null 이면 default 반환
+                testEntity.str.nullif("member1"), // name이 member1이면 null 반환
+
+                Expressions.constant("A"),
+
+                Expressions.currentDate(),
+                Expressions.currentTime(),
+                Expressions.currentTimestamp(),
+
+                Expressions.stringTemplate("replace({0},{1},{2})", testEntity.str, "member", "M"),
+                Expressions.numberTemplate(Integer.class, "abs({0})", testEntity.num)
+        )
+        .from(testEntity)
+        .fetch();
+```
+
+## Case 문
+`select()`, `where()`, `orderBy()`에서 사용할 수 있다.
+
+### 단순한 조건
+특정 필드의 값을 기준으로 비교할 때는 메서드 체이닝 방식으로 간결하게 작성할 수 있다.
+```java
+List<String> result = queryFactory
+        .select(
+                member.age
+                        .when(10).then("열살")
+                        .when(20).then("스무살")
+                        .otherwise("기타")
+        )
+        .from(member)
+        .fetch();
+```
+
+### 복잡한 조건
+범위 비교, 크기 비교 등 조건식이 필요한 경우 `CaseBuilder`를 사용한다.
+변수에 담아 재사용할수도 있다.
+```java
+NumberExpression<Integer> rankPath = new CaseBuilder()
+        .when(member.age.between(0, 20)).then(2)
+        .when(member.age.between(21, 30)).then(1)
+        .otherwise(3);
+
+List<Tuple> result = queryFactory
+        .select(
+                rankPath,
+                member.name,
+                member.age
+        )
+        .from(member)
+        .orderBy(rankPath.desc())
+        .fetch();
+```
+
+## 프로젝션 기본
+### 프로젝션 대상이 하나인 경우
+타입을 명확하게 지정할 수 있다.
+```java
+List<String> result = queryFactory
+        .select(member.name)
+        .from(member)
+        .fetch();
+```
+
+### 프로잭션 대상이 둘 이상인 경우
+`Tuple`로 결과를 반환 받을 수 있다.
+```java
+List<Tuple> result = queryFactory
+        .select(
+                member.name,
+                member.age)
+        .from(member)
+        .fetch();
+
+for (Tuple tuple : result) {
+    String name = tuple.get(member.name);
+    Integer age = tuple.get(member.age);
+    System.out.println("name = " + name);
+    System.out.println("age = " + age);
+}
+```
+
+## 프로젝션 DTO
+총 4가지 방식을 지원한다.
+
+타입 안정성과 유지보수의 편의성을 위해 **@QueryProjection** 방식을 권장한다.<br>
+만약 설계상 DTO가 Querydsl에 의존하는 것을 방지해야 한다면 **constructor** 방식을 고려해볼 수 있다.
+| 방식                 | 특징 및 장점                                          | 단점 및 주의사항                         |
+|----------------------|------------------------------------------------------|----------------------------------------|
+| **@QueryProjection** | 컴파일 시점 타입 체크<br>불변 객체 생성 가능<br>IDE 자동완성 활용 가능 | DTO가 Querydsl 라이브러리에 의존함<br>Q 클래스 생성 필요 |
+| **constructor**      | DTO의 순수성 유지<br>불변 객체 생성 가능                    | 런타임 에러 위험 (파라미터 순서 불일치 시)<br>가독성 저하 |
+| **fields**           | Setter 없이 필드에 직접 주입 (리플랙션)                | 불변 객체(`final`) 처리 불가<br>필드명이 일치해야 함 |
+| **bean**             | Setter로 주입 (자바빈즈 표준 방식)                     | 불변 객체(`final`) 처리 불가<br>필드명이 일치해야 함<br>Setter 노출 
+
+다음은 각 방식별 DTO와 조회 쿼리 예시이다.
+### @QueryProjection
+```java
+@Getter
+@ToString
+public class MemberDtoProjection {
+    private String name;
+    private Integer age;
+
+    @QueryProjection
+    public MemberDtoProjection(String name, Integer age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+```
+```java
+List<MemberDtoProjection> result = queryFactory
+        .select(new QMemberDtoProjection(member.name, member.age))
+        .from(member)
+        .fetch();
+```
+
+### constructor
+```java
+@Getter
+@ToString
+public class MemberDtoConstructor {
+    private String name;
+    private Integer age;
+
+    public MemberDtoConstructor(String name, Integer age) {
+        this.name = name;
+        this.age = age;
+    }
+}
+```
+```java
+List<MemberDtoConstructor> result = queryFactory
+        .select(Projections.constructor(MemberDtoConstructor.class,
+                member.name,
+                member.age))
+        .from(member)
+        .fetch();
+```
+
+### fields
+```java
+@Getter
+@ToString
+public class MemberDtoFields {
+    private String name;
+    private Integer age;
+}
+```
+```java
+List<MemberDtoFields> result = queryFactory
+        .select(Projections.fields(MemberDtoFields.class,
+                member.name,
+                member.age))
+        .from(member)
+        .fetch();
+```
+
+### bean
+```java
+@Getter
+@Setter
+@ToString
+public class MemberDtoBean {
+    private String name;
+    private Integer age;
+}
+```
+```java
+List<MemberDtoBean> result = queryFactory
+        .select(Projections.bean(MemberDtoBean.class,
+                member.name,
+                member.age))
+        .from(member)
+        .fetch();
+```
