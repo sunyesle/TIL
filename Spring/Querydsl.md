@@ -384,6 +384,61 @@ List<Member> result = queryFactory
         .fetch();
 ```
 
+## 조인 시 주의 사항
+> 예제 코드를 위해 도메인 모델을 다음과 같이 수정하였다.
+> 
+> <img width="601" height="171" alt="조인 예제 도메인" src="https://github.com/user-attachments/assets/c3c65c96-7102-42d4-8717-16e13c650c7c" />
+
+JPQL의 특징 중 하나는 SQL과 달리 **객체 그래프를 탐색**하는 방식으로 쿼리를 작성해야 한다는 것이다.
+조인 쿼리 작성 시 주의하지 않으면 **의도치 않은 조인이 발생**할 수 있다.
+### 묵시적 조인의 위험성
+연관 필드를 `member.team.company`와 같이 접근할 경우, `member → team → company`로 이어지는 **묵시적 조인**이 발생한다.
+```java
+List<Member> result = queryFactory
+        .select(member)
+        .from(member)
+        .join(member.team.company, company)
+        .join(member.team, team)
+        .where(
+                member.team.name.eq("TeamA"),
+                member.team.company.name.eq("CompanyA")
+        )
+        .fetch();
+```
+위 코드를 실행해보면 총 4번의 조인이 발생하는 것을 확인할 수 있다.
+```sql
+select
+	m1_0.member_id, m1_0.age, m1_0.name, m1_0.team_id 
+from
+	member m1_0 
+join team    t1_0 on t1_0.team_id    = m1_0.team_id 
+join company c1_0 on c1_0.company_id = t1_0.company_id 
+join team    t2_0 on t2_0.team_id    = m1_0.team_id 
+join company c2_0 on c2_0.company_id = t2_0.company_id 
+where
+	t2_0.name=? 
+	and c2_0.name=?
+```
+이처럼 묵시적 조인은 SQL 예측이 어려우며, 성능 저하의 원인이 될 수 있다.
+
+### 명시적 조인으로 개선
+- from 절은 탐색의 시작점이다.
+- 조인 대상에 별칭을 부여한다.
+- 조인은 이미 선언된 별칭을 기준으로 이어간다.
+- 조인이 완료된 대상은 별칭으로 참조한다.
+```java
+List<Member> result = queryFactory
+        .select(member)
+        .from(member)
+        .join(member.team, team)     // Member -> Team
+        .join(team.company, company) // Team -> Company (이미 선언된 team 별칭 사용)
+        .where(
+                team.name.eq("TeamA"), // 별칭을 통한 접근
+                company.name.eq("CompanyA")
+        )
+        .fetch();
+```
+
 ## 서브쿼리
 `JPAExpressions`을 사용하여 서브쿼리를 작성할 수 있다.
 ### 중첩된 서브쿼리(Nested Subquery) : WHERE 절, HAVING 절의 서브쿼리
@@ -463,27 +518,27 @@ List<String> result = queryFactory
 ```
 
 ## 함수
-문자열, 숫자, 날짜 타입의 함수들에 대해 알아보기 위해 테스트용 엔티티를 추가하였다.
-```java
-@Entity
-@Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class TestEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String str;
-    private Integer num;
-    private LocalDateTime createdAt;
-
-    public TestEntity(String str, Integer num, LocalDateTime createdAt) {
-        this.str = str;
-        this.num = num;
-        this.createdAt = createdAt;
-    }
-}
-```
+> 문자열, 숫자, 날짜 타입의 함수들에 대해 알아보기 위해 테스트용 엔티티를 추가하였다.
+> ```java
+> @Entity
+> @Getter
+> @NoArgsConstructor(access = AccessLevel.PROTECTED)
+> public class TestEntity {
+>     @Id
+>     @GeneratedValue(strategy = GenerationType.IDENTITY)
+>     private Long id;
+> 
+>     private String str;
+>     private Integer num;
+>     private LocalDateTime createdAt;
+> 
+>     public TestEntity(String str, Integer num, LocalDateTime createdAt) {
+>         this.str = str;
+>         this.num = num;
+>         this.createdAt = createdAt;
+>     }
+> }
+> ```
 
 ### 함수 목록
 ```java
