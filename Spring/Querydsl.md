@@ -124,6 +124,7 @@ public @interface DataJpaQuerydslTest {
 }
 ```
 
+# 기본 문법
 ## JPQL vs Querydsl
 ### JPQL
 - 문자열 기반으로 쿼리를 작성한다.
@@ -743,3 +744,69 @@ List<MemberDtoBean> result = queryFactory
         .from(member)
         .fetch();
 ```
+
+## 동적 쿼리
+### BooleanExpression
+`where()` 파라미터에 `null`이 들어오면 해당 조건은 무시된다는 특징을 이용하여 동적 쿼리를 작성할 수 있다.
+
+`BooleanExpression`은 개별 조건을 작성하는 데 적합하다.
+각 조건을 메서드로 분리하여 가독성이 높고, 재사용이 가능하다.
+```java
+private List<Member> searchMember2(String nameCond, Integer ageCond) {
+    return queryFactory
+            .selectFrom(member)
+            .where(nameEq(nameCond), ageEq(ageCond))
+            .fetch();
+}
+
+private BooleanExpression nameEq(String nameCond) {
+    return nameCond != null ? member.name.eq(nameCond) : null;
+}
+
+private BooleanExpression ageEq(Integer ageCond) {
+    return ageCond != null ? member.age.eq(ageCond) : null;
+}
+```
+
+### BooleanBuilder
+`BooleanBuilder`는 `and()`, `or()`로 여러 개의 `BooleanExpression`을 조합할 수 있다.
+
+여러 조건을 하나의 묶음으로 처리하거나, 내부 분기 로직이 복잡할 때 활용된다.
+`and()`, `or()` 파라미터로 `null`이 들어와도 무시하므로 별도의 방어 로직이 필요 없다.
+```java
+private List<Member> searchMember2(String nameCond, Integer ageCond) {
+    return queryFactory
+            .selectFrom(member)
+            .where(searchFilter(nameCond, ageCond))
+            .fetch();
+}
+
+private BooleanBuilder searchFilter2(String nameCond, Integer ageCond) {
+    return new BooleanBuilder()
+            .and(nameEq(nameCond))
+            .and(ageEq(ageCond));
+}
+```
+
+# 활용
+## 사용자 정의 리포지토리
+다음과 같은 구조를 사용하면 JPA의 기본 기능과 Querydsl로 구현한 기능을 하나의 인터페이스로 통합할 수 있다.
+```java
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberCustomRepository {
+}
+
+public interface MemberCustomRepository {
+}
+
+@RequiredArgsConstructor
+public class MemberCustomRepositoryImpl implements MemberCustomRepository {
+    private final JPAQueryFactory queryFactory;
+}
+```
+
+---
+**Reference**
+- https://github.com/spring-org/springboot-jpa-in-action/blob/master/springboot-jpa-querydsl/README.md
+- https://sjh9708.tistory.com/175
+- https://heesutory.tistory.com/42
+- https://adjh54.tistory.com/489?category=1173558
