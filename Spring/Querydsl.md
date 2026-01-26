@@ -788,6 +788,46 @@ private BooleanBuilder searchFilter2(String nameCond, Integer ageCond) {
 }
 ```
 
+## 동적 정렬
+허용된 정렬 조건만 노출하기 위해 Enum을 사용했다.
+```java
+public enum MemberSort {
+    AGE_ASC, AGE_DESC, NAME_ASC, NAME_DESC
+}
+```
+```java
+@Test
+void dynamicSort() {
+	List<MemberSort> sortRequests = List.of(MemberSort.NAME_ASC, MemberSort.AGE_DESC);
+
+	List<Member> result = queryFactory
+			.selectFrom(member)
+			.orderBy(getSortCondition(sortRequests))
+			.fetch();
+}
+
+private OrderSpecifier[] getSortCondition(List<MemberSort> sortRequests) {
+	// 요청된 정렬 조건 추가
+	List<OrderSpecifier<?>> orderSpecifiers = sortRequests.stream()
+			.map(this::getOrderSpecifier)
+			.collect(Collectors.toList());
+
+	// 기본 정렬 조건 추가
+	orderSpecifiers.add(member.id.desc());
+
+	return orderSpecifiers.toArray(OrderSpecifier[]::new);
+}
+
+private OrderSpecifier<?> getOrderSpecifier(MemberSort sort) {
+	return switch (sort) {
+		case AGE_ASC -> member.age.asc();
+		case AGE_DESC -> member.age.desc();
+		case NAME_ASC -> member.name.asc();
+		case NAME_DESC -> member.name.desc();
+	};
+}
+```
+
 # 활용
 ## 사용자 정의 리포지토리
 다음과 같은 구조를 사용하면 JPA의 기본 기능과 Querydsl로 구현한 기능을 하나의 인터페이스로 통합할 수 있다.
@@ -803,6 +843,29 @@ public class MemberCustomRepositoryImpl implements MemberCustomRepository {
     private final JPAQueryFactory queryFactory;
 }
 ```
+
+## 스프링 데이터 페이징 활용
+```java
+Pageable pageable = PageRequest.of(0, 10);
+
+List<Member> content = queryFactory
+        .selectFrom(member)
+        .orderBy(member.name.desc())
+		.offset(pageable.getOffset())
+		.limit(pageable.getPageSize())
+		.fetch();
+
+JPAQuery<Long> countQuery = queryFactory
+		.select(member.count())
+		.from(member);
+
+Page<Member> page = PageableExecutionUtils.getPage(content, pageable, countQuery::fetchOne);
+```
+`PageableExecutionUtils.getPage()`는 카운터 쿼리를 **함수형 인터페이스**(`LongSupplier`)로 전달받는다.
+불필요한 상황에는 **카운트 쿼리를 생략**한다.
+
+- 첫 번째 페이지이면서 가져온 content 수가 페이지 사이즈보다 작을 때 (ex: content: 3, 페이지 사이즈: 10)
+- 마지막 페이지일 때
 
 ---
 **Reference**
