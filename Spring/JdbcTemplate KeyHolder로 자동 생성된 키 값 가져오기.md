@@ -161,6 +161,8 @@ public NativeResultset(OkPacket ok) {
 
 [**OkPacket**](https://dev.mysql.com/doc/dev/mysql-server/8.0.45/page_protocol_basic_ok_packet.html)은 명령이 성공적으로 완료되었다는 것을 알리기 위해 MySQL 서버에서 클라이언트로 보내는 패킷이다.
 
+<img width="506" height="551" alt="OkPacket" src="https://github.com/user-attachments/assets/31ae1acd-608c-4724-92ca-478101984d1b" />
+
 드라이버는 해당 패킷의 정보를 추출하여 수정된 행 개수(**affected_rows**)와 마지막 삽입 ID(**last_insert_id**)를 알아낼 수 있다.
 
 ---
