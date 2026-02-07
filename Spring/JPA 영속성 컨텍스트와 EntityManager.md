@@ -8,14 +8,19 @@
 ## EntityManager
 특정 트랜잭션 단위에서 엔티티에 대한 작업을 수행하는 데 사용하며, Thread-safety 하지 않다.
 
-`EntityManager`를 통해 영속성 컨텍스트에 접근하여 엔티티를 관리할 수 있다.
+`EntityManager`를 통해 **영속성 컨텍스트에 접근하여 엔티티를 관리**할 수 있다.
 
 ## 영속성 컨텍스트 (Persistence Context)
 **논리적인 개념**으로 엔티티를 영구 저장하는 환경을 말한다.
 애플리케이션과 데이터베이스 사이에서 객체를 보관하는 **가상의 데이터베이스 역할**을 한다.
 
+<img width="521" height="301" alt="EntityManager" src="https://github.com/user-attachments/assets/9041507c-b459-43d0-9fc9-9a86ac1eab17" />
+
 ### 엔티티의 생명주기
 다음 4가지 생명주기를 바탕으로 `EntityManager`를 통해 엔티티를 관리한다.
+
+<img width="521" height="361" alt="JPA 엔티티 생명주기" src="https://github.com/user-attachments/assets/1879e523-02e3-4b54-aab8-029ee65174aa" />
+
 1. **비영속 상태(New)**
    - 엔티티가 생성은 되었지만, 영속성 컨텍스트와 관련이 없는 상태이다.
 2. **영속 상태(Managed)**
@@ -26,6 +31,9 @@
    - 엔티티가 영속성 컨텍스트에 의해 관리되고 있다가, `remove()`를 통해 삭제된 상태이다.
 
 ### 영속성 컨텍스트의 주요 기능
+
+<img width="611" height="381" alt="영속성 컨텍스트" src="https://github.com/user-attachments/assets/2b2536a8-c81a-405f-9bdc-9aace90ee191" />
+
 **- 1차 캐시**<br>
 영속성 컨텍스트는 내부에 캐시를 가지고 있으며, 이를 1차 캐시라고 한다. 영속 상태의 엔티티는 `Map<K, V>` 형태로 모두 여기에 저장된다.
 - **Key**: `@Id`로 매핑한 식별자 값
