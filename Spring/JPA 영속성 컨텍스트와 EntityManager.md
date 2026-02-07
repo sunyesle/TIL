@@ -55,6 +55,16 @@
 엔티티를 영속성 컨텍스트에 보관할 때 최초 상태를 복사해서 저장해둔다. (스냅샷)
 엔티티와 스냅샷을 비교하여 변경된 내용이 있다면 자동으로 UPDATE SQL을 생성한다.
 
+### Flush
+**flush**는 **영속성 컨텍스트의 변경사항을 데이터베이스에 반영**(동기화)하는 과정이다.
+
+`flush()` 호출 시, 쓰기 지연 SQL 저장소에 모아두었던 쿼리를 데이터베이스에 전달한다. DB 트랜잭션 커밋과는 별개의 작업이며, 영속성 컨텍스트(1차 캐시)도 그대로 유지된다.
+
+Hibernate 기본값인 `FlushModeType.AUTO` 기준으로 `flush()`가 자동 호출되는 상황은 다음과 같다.
+- **트랜잭션을 커밋하기 전**: 트랜잭션을 끝내기 전에 영속성 컨텍스트의 변경 사항을 모두 반영하기 위해 `flush()` 호출
+- **JPQL 실행 전**: 영속성 컨텍스트에 대기중인 작업(`INSERT`, `UPDATE`, `DELETE`)과 JPQL로 조회하려는 대상이 겹치는 경우 `flush()` 호출
+- **Native SQL 실행 전**: 항상 `flush()` 호출
+
 ---
 **Reference**
 - https://dahye-jeong.gitbook.io/spring/spring/2020-04-11-jpa-basic/2022-03-12-persistence-context
