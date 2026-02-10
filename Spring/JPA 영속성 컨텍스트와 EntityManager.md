@@ -10,6 +10,58 @@
 
 `EntityManager`를 통해 **영속성 컨텍스트에 접근하여 엔티티를 관리**할 수 있다.
 
+### 예시
+```java
+void main() {
+    // [엔티티 매니저 팩토리] - 생성
+    EntityManagerFactory emf = Persistence.createEntityManagerFactory("jpa_test");
+
+    // [엔티티 매니저] - 생성
+    EntityManager em = emf.createEntityManager();
+
+    // [트랜잭션] - 획득
+    EntityTransaction tx = em.getTransaction();
+
+    try {
+        tx.begin();    // [트랜잭션] - 시작
+
+        // 비즈니스 로직 실행
+        logic(em);     
+
+        tx.commit();   // [트랜잭션] - 커밋
+    } catch (Exception e) {
+        tx.rollback(); // [트랜잭션] - 롤백
+    } finally {
+        em.close(); // [엔티티 매니저] - 종료
+    }
+
+    emf.close(); // [엔티티 매니저 팩토리] - 종료
+}
+
+// EntityManager를 통해 엔티티를 관리하고 CRUD 작업을 수행한다.
+private void logic(EntityManager em) {
+    Member member = new Member();
+    member.setId(1L);
+    member.setName("test");
+    member.setAge(25);
+
+    // 등록
+    em.persist(member);
+
+    // 수정
+    member.setAge(26);
+
+    // 단 건 조회
+    Member findMember = em.find(Member.class, 1L);
+
+    // 목록 조회
+    List<Member> members = em.createQuery("select m from Member m", Member.class).getResultList();
+
+    // 삭제
+    em.remove(member);
+}
+```
+
 ## 영속성 컨텍스트 (Persistence Context)
 **논리적인 개념**으로 엔티티를 영구 저장하는 환경을 말한다.
 애플리케이션과 데이터베이스 사이에서 객체를 보관하는 **가상의 데이터베이스 역할**을 한다.
