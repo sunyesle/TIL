@@ -143,10 +143,13 @@ public class KafkaMessageConsumer {
 
 ## 카프카 설정 주의 사항
 ### 컨슈머 자동 커밋
-```properties
-enable.auto.commit = true # 컨슈머 자동 커밋 활성화
-auto.commit.interval.ms = 5000ms # 5초 간격으로 커밋을 진행
-max.poll.records = 100 # poll을 요청할 때 가져오는 최대 레코드 수
+```yml
+spring:
+  kafka:
+    consumer:
+      enable-auto-commit: true # 컨슈머 자동 커밋 활성화
+      auto-commit-interval: 5000ms # 5초 간격으로 커밋을 진행
+      max-poll-records: 100 # poll() 호출당 반환할 최대 레코드 수
 ```
 해당 설정에서는 다음과 같은 상황에서 메시지 유실 또는 중복이 발생할 수 있다.
 
