@@ -68,6 +68,53 @@ Spring Data Redis의 핵심 클래스로, Redis와 상호작용을 위한 메서
 | `opsForZSet()`  | `ZSetOperations`  | Sorted Set | `add`, `rangeByScore`         |
 | `opsForHash()`  | `HashOperations`  | Hash       | `put`, `get`, `entries`       |
 
+### 예시
+**ValueOperations**
+```java
+RedisTemplate<String, String> redisTemplate;
+ValueOperations<String, String> ops = redisTemplate.opsForValue();
+ops.set("key", "value");
+String value = ops.get("key");
+```
+
+**ListOperations**
+```java
+RedisTemplate<String, String> redisTemplate;
+ListOperations<String, String> ops = redisTemplate.opsForList();
+ops.rightPush("key", "value1");
+ops.rightPush("key", "value2");
+String value = ops.leftPop("key");
+```
+
+**SetOperations**
+```java
+RedisTemplate<String, String> redisTemplate;
+SetOperations<String, String> ops = redisTemplate.opsForSet();
+ops.add("key", "value1");
+ops.add("key", "value2");
+ops.add("key", "value1");
+Set<String> values = ops.members("key");
+```
+
+**ZSetOperations**
+```java
+RedisTemplate<String, String> redisTemplate;
+ZSetOperations<String, String> ops = redisTemplate.opsForZSet();
+ops.add("key", "value1", 3.0);
+ops.add("key", "value2", 1.0);
+ops.add("key", "value3", 2.0);
+Set<String> values = ops.range("key", 0, 2);
+```
+
+**HashOperations**
+```java
+RedisTemplate<String, String> redisTemplate;
+HashOperations<String, String, String> ops = redisTemplate.opsForHash();
+ops.put("key", "hashKey1", "value1");
+ops.put("key", "hashKey2", "value2");
+String value = ops.get("key", "hashKey1");
+```
+
 ---
 **Reference**
 - https://adjh54.tistory.com/459
