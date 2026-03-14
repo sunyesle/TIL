@@ -126,6 +126,80 @@ public class OutboxService {
 }
 ```
 
+## Application Event를 이용한 Outbox 저장/발행 로직 분리
+Application Event를 활용하여, 비즈니스 로직과 `Outbox` 저장 로직을 분리하고 이벤트가 즉시 발행될 수 있도록 개선했다.
+
+이벤트 객체를 정의한다.
+```java
+public class OutboxEvent {
+    private final String eventType;
+    private final Object data;
+    private Long outboxId;
+
+    OutboxEvent(String eventType, Object data) {
+        this.eventType = eventType;
+        this.data = data;
+    }
+
+    public void setOutboxId(Long outboxId) {
+        this.outboxId = outboxId;
+    }
+    public Long getOutboxId() {
+        return outboxId;
+    }
+}
+```
+
+서비스에서 직접 `Outbox` 테이블에 데이터 저장하는 대신, 애플리케이션 이벤트를 발행한다.
+```java
+@Service
+public class OrderService {
+
+    private final ApplicationEventPublisher publisher;
+
+    @Transactional 
+    public Order createOrder(OrderRequest orderRequest) { 
+        Order order = createOrder(orderRequest); // 비즈니스 로직
+
+        order = orderRepository.save(order); // 데이터베이스에 주문 정보 저장
+
+        // ApplicationEvent 발행
+        OrderCreatedEvent data = new OrderCreatedEvent(order);
+        publisher.publishEvent(new OutboxEvent("order-placed", data));
+
+        return order;
+    }
+}
+```
+
+이벤트 리스너 로직은 다음과 같다.
+- `BEFORE_COMMIT`: 동일한 트랜잭션에서 `Outbox` 테이블에 데이터를 저장하고, 이벤트 객체에 `OutboxId` 값을 설정한다.
+- `AFTER_COMMIT`: 커밋 완료 후 즉시 `OutboxId`에 해당하는 메시지를 발행한다.
+```java
+@Component
+public class OutboxEventListener {
+
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void saveOutbox(OutboxEvent event) {
+        Outbox outbox = outboxRepository.save(new Outbox(event.eventType(), objectMapper.writeValueAsString(event.payload())));
+        
+        // 생성된 ID를 이벤트 객체에 보관 (AFTER_COMMIT에서 쓰기 위함)
+        event.setOutboxId(outbox.getId());
+    }
+
+    @Async(AsyncConfig.EVENT_ASYNC_TASK_EXECUTOR) // 비동기로 진행
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void processOutbox(OutboxEvent event) {
+        // 메시지 발행
+        outboxProcessor.process(outbox.getId());
+    }
+}
+```
+
+스케줄러는 즉시 발행 실패건을 처리하기 위한 안전장치로 사용하며, 변경사항은 다음과 같다.
+- 스케줄러 실행 주기를 1분으로 늘림
+- 최근 30초 이내에 저장된 outbox는 이벤트 리스너에서 처리 중일 수 있으므로 스케줄러 대상에서 제외
+
 ---
 **Reference**
 - https://helloworld.kurly.com/blog/2026-outbox-pattern-and-retry-topic/
