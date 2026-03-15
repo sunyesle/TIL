@@ -109,6 +109,29 @@ abstract class TransactionalApplicationListenerSynchronization<E extends Applica
 }
 ```
 
+## 주의 사항
+### 이벤트 페이즈별 실행 순서
+`TransactionalApplicationListenerSynchronization`의 `afterCompletion()` 메서드에서 `AFTER_COMMIT`, `AFTER_ROLLBACK`, `AFTER_COMPLETION` 페이즈를 모두 처리한다.
+이로인해, `AFTER` 계열 이벤트의 호출 순서는 등록된 `TransactionSynchronization` 목록의 순서에 따라 정해지게 된다.
+
+이벤트 리스너간의 순서가 중요한 경우, 이벤트 리스너에 `@Order`를 사용해서 **명시적으로 우선순위를 지정**해야 한다.
+
+### 리스너 내 DB 작업
+`AFTER_COMMIT`, `AFTER_ROLLBACK`, `AFTER_COMPLETION` 메서드가 실행되는 시점은 DB 트랜잭션은 종료되었지만, 스프링 트랜잭션 컨텍스트는 아직 유지되고 있는 상태이다.
+
+이 시점에는 새로운 DB 작업을 수행해도 실제 DB에 반영되지 않으며, 필요하다면 **명시적으로 새로운 스프링 트랜잭션 컨텍스트를 요청**해야 한다.
+
+- **트랜잭션 전파 속성 `@Transactional(propagation = Propagation.REQUIRES_NEW)`**: 항상 새로운 트랜잭션을 시작하도록 명시한다.
+- **이벤트 리스너 `@Async`**: 이벤트를 비동기로 다른 스레드에서 실행하여 새로운 트랜잭션을 시작하도록 한다.
+
+### 리스너 예외 처리
+`TransactionSynchronizationUtils.invokeAfterCompletion()` 메서드를 확인해보면 `try-catch`로 예외를 잡아 로깅만 수행하는 것을 확인할 수 있다.
+
+Spring Boot 3.2 (Spring Framework 6.1.0) 전 버전에서는 로그 레벨이 `error`가 아니라 `debug`로 설정되어있다. ([관련 커밋](https://github.com/spring-projects/spring-framework/commit/3f65b8506bbeda0f321408e95dbc92e2b00eca04))
+
+이전 버전의 스프링을 사용하는 경우, 에러가 묻히지 않도록 이벤트 리스너 내에서 `try-catch`하는 것이 좋다.
+
+
 ---
 **Reference**
 - https://github.com/spring-projects/spring-framework/blob/main/spring-tx/src/main/java/org/springframework/transaction/support/AbstractPlatformTransactionManager.java
