@@ -13,60 +13,73 @@
 `CompletableFuture`는 `Future`와 `CompletionStage` 인터페이스를 구현하고 있다.
 `CompletionStage`는 작업을 중첩시키거나 완료 후 콜백을 위해 추가되었다.
 
-`CompletionStage` 기능은 크게 다음과 같이 나뉜다.
+`CompletableFuture`의 기능은 크게 다음과 같이 나뉜다.
 - 비동기 작업 실행
 - 작업 콜백
 - 작업 조합
 - 예외 처리
+- 결과 반환
 
 ### 비동기 작업 실행
-- `runAsync`: 반환 값이 없는 작업을 비동기로 실행한다.
-- `supplyAsync`: 반환 값이 있는 작업을 비동기로 실행한다.
-
 `runAcync`와 `supplyAsync`는 기본적으로 `ForkJoinPool.commonPool()`을 사용해 작업을 실행할 스레드를 얻는다.
+- `runAsync`: 결과값이 없는 작업을 비동기로 실행한다.
+- `supplyAsync`: 결과값이 있는 작업을 비동기로 실행한다.
 ```java
 @Test
-void testRunAsync() throws ExecutionException, InterruptedException {
-    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> System.out.println("Hello"));
-    future.get();
+void testRunAsync() {
+    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> System.out.println("hello"));
+    future.join();
 }
 ```
 ```java
 @Test
-void testSupplyAsync() throws ExecutionException, InterruptedException {
-    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "Hello");
-    System.out.println(future.get());
+void testSupplyAsync() {
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "hello");
+    System.out.println(future.join());
 }
 ```
 
 ### 작업 콜백
-- `thenApply`: 반환 값을 받아서 다른 값을 반환한다. (`Function`)
-- `thenAccept`: 반환 값을 받아서 처리하고 값을 반환하지 않는다. (`Consumer`)
-- `thenRun`: 반환 값을 받지 않고 작업 실행한다. (`Runnable`)
-
 메서드 체이닝을 통해 다양한 함수형 인터페이스들을 콜백으로 등록할 수 있다.
+- `thenApply`: 결과값을 받아서 다른 값을 반환한다. (`Function`)
+- `thenAccept`: 결과값을 받아서 처리하고 값을 반환하지 않는다. (`Consumer`)
+- `thenRun`: 결과값을 받지 않고 작업 실행한다. (`Runnable`)
+- `whenComplete`: 결과값 또는 예외를 받지만, 결과를 변경하지 않고 그대로 다음 단계로 넘긴다. 주로 로그 출력이나 리소스 정리와 같은 부수적인 작업에 사용된다. (`BiConsumer`)
 ```java
 @Test
-void testThenApply() throws ExecutionException, InterruptedException {
-    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "Hello")
+void testThenApply() {
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "hello")
             .thenApply(String::toUpperCase);
-    System.out.println(future.get());
+    System.out.println(future.join());
 }
 ```
 ```java
 @Test
-void testThenAccept() throws ExecutionException, InterruptedException {
-    CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> "Hello")
+void testThenAccept() {
+    CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> "hello")
             .thenAccept(System.out::println);
-    future.get();
+    future.join();
 }
 ```
 ```java
 @Test
-void testThenRun() throws ExecutionException, InterruptedException {
-    CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> "Hello")
+void testThenRun() {
+    CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> "hello")
             .thenRun(() -> System.out.println("Hi"));
-    future.get();
+    future.join();
+}
+```
+```java
+@Test
+void testWhenComplete() {
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "hello")
+            .whenComplete((result, e) -> {
+                if (e == null) {
+                    System.out.println("Log: " + result);
+                }
+            });
+
+    System.out.println(future.join());
 }
 ```
 
@@ -77,30 +90,26 @@ void testThenRun() throws ExecutionException, InterruptedException {
 - `anyOf`: 작업을 동시에 실행하고, 가장 먼저 완료된 작업 결과에 콜백을 실행한다.
 ```java
 @Test
-void testThenCompose() throws ExecutionException, InterruptedException {
+void testThenCompose() {
     CompletableFuture<String> hello = CompletableFuture.supplyAsync(() -> "hello");
 
-    CompletableFuture<String> future = hello.thenCompose(this::sendMessage);
-    System.out.println(future.get());
-}
-
-private CompletableFuture<String> sendMessage(String message) {
-    return CompletableFuture.supplyAsync(() -> "send: " + message);
+    CompletableFuture<String> future = hello.thenCompose(message -> CompletableFuture.supplyAsync(() -> "send: " + message));
+    System.out.println(future.join());
 }
 ```
 ```java
 @Test
-void testThenCombine() throws ExecutionException, InterruptedException {
+void testThenCombine() {
     CompletableFuture<String> hello = CompletableFuture.supplyAsync(() -> "hello");
     CompletableFuture<String> hi = CompletableFuture.supplyAsync(() -> "hi");
 
     CompletableFuture<String> future = hello.thenCombine(hi, (a, b) -> a + " " + b);
-    System.out.println(future.get());
+    System.out.println(future.join());
 }
 ```
 ```java
 @Test
-void testAllOf() throws ExecutionException, InterruptedException {
+void testAllOf() {
     CompletableFuture<String> hello = CompletableFuture.supplyAsync(() -> "hello");
     CompletableFuture<String> hi = CompletableFuture.supplyAsync(() -> "hi");
 
@@ -111,12 +120,12 @@ void testAllOf() throws ExecutionException, InterruptedException {
                     .map(CompletableFuture::join)
                     .toList());
 
-    System.out.println(result.get());
+    System.out.println(result.join());
 }
 ```
 ```java
 @Test
-void testAnyOf() throws ExecutionException, InterruptedException {
+void testAnyOf() {
     CompletableFuture<String> hello = CompletableFuture.supplyAsync(() -> {
         try {
             Thread.sleep(500);
@@ -129,8 +138,8 @@ void testAnyOf() throws ExecutionException, InterruptedException {
 
     CompletableFuture<String> result = CompletableFuture.anyOf(hello, hi)
             .thenApply(Object::toString);
-    
-    System.out.println(result.get());
+
+    System.out.println(result.join());
 }
 ```
 
@@ -140,35 +149,64 @@ void testAnyOf() throws ExecutionException, InterruptedException {
 ```java
 @ParameterizedTest
 @ValueSource(booleans = {true, false})
-void testExceptionally(boolean doThrow) throws ExecutionException, InterruptedException {
+void testExceptionally(boolean doThrow) {
     CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
         if (doThrow) {
-            throw new IllegalArgumentException("Invalid Argument");
+            throw new RuntimeException("exception");
         }
         return "success";
     }).exceptionally(Throwable::getMessage);
 
-    System.out.println(future.get());
+    System.out.println(future.join());
 }
 ```
 ```java
 @ParameterizedTest
 @ValueSource(booleans = {true, false})
-void testHandle(boolean doThrow) throws ExecutionException, InterruptedException {
+void testHandle(boolean doThrow) {
     CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
         if (doThrow) {
-            throw new IllegalArgumentException("Invalid Argument");
+            throw new RuntimeException("exception");
         }
         return "success";
     }).handle((result, e) -> e == null ? result : e.getMessage());
 
-    System.out.println(future.get());
+    System.out.println(future.join());
 }
 ```
 > 실행 결과(두 예제 모두 동일하다)
 ```log
-doThrow = true 일때: java.lang.IllegalArgumentException: Invalid Argument
+doThrow = true 일때: java.lang.RuntimeException: exception
 doThrow = false 일떄: success
+```
+
+### 결과 반환
+두 메서드 모두 작업이 완료될 때까지 대기(Blocking)한 후 결과를 반환하지만, 예외 처리 방식이 다르다.
+- `join()`: 작업 실행 중 예외 발생 시 Unchecked Exception을 던진다.
+- `get()`: 작업 실행 중 예외 발생 시 Checked Exception을 던진다. 예외를 명시적으로 처리해야 된다.
+```java
+@Test
+public void testJoin() {
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "hello");
+    System.out.println(future.join());
+
+    CompletableFuture<String> exceptionFuture = CompletableFuture.failedFuture(new RuntimeException("exception"));
+    assertThrows(CompletionException.class, exceptionFuture::join);
+}
+```
+```java
+@Test
+public void testGet() {
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "hello");
+    try {
+        System.out.println(future.get());
+    } catch (ExecutionException | InterruptedException e) {
+        throw new RuntimeException(e);
+    }
+
+    CompletableFuture<String> exceptionFuture = CompletableFuture.failedFuture(new RuntimeException("exception"));
+    assertThrows(ExecutionException.class, exceptionFuture::get);
+}
 ```
 
 ## Java 9 CompletableFuture 개선 사항
@@ -188,22 +226,16 @@ void testTimeout() {
                 }
                 return "hello";
             })
-            .orTimeout(1, TimeUnit.SECONDS)
-            .whenComplete((result, e) -> {
-                if (e == null){
-                    System.out.println(result);
-                }else{
-                    e.printStackTrace();
-                }
-            });
+            .orTimeout(1, TimeUnit.SECONDS);
 
-    assertThrows(ExecutionException.class, future::get);
+    CompletionException exception = assertThrows(CompletionException.class, future::join);
+    exception.printStackTrace();
 }
 ```
 ```java
 @Test
 void testComplateOnTimeout() {
-    CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> {
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
                 try {
                     Thread.sleep(1500);
                 } catch (InterruptedException e) {
@@ -211,10 +243,9 @@ void testComplateOnTimeout() {
                 }
                 return "hello";
             })
-            .completeOnTimeout("timeout", 1, TimeUnit.SECONDS)
-            .thenAccept(result -> System.out.println(result));
+            .completeOnTimeout("timeout", 1, TimeUnit.SECONDS);
 
-    assertThrows(ExecutionException.class, future::get);
+    System.out.println(future.join());
 }
 ```
 
@@ -222,13 +253,12 @@ void testComplateOnTimeout() {
 - `delayedExecutor`: 지정된 지연 후에 작업을 실행하는 `Executor`를 반환한다.
 ```java
 @Test
-void testDelay() throws ExecutionException, InterruptedException {
+void testDelayedExecutor() {
     long start = System.nanoTime();
-    CompletableFuture<Void> future = CompletableFuture.supplyAsync(() -> "hello", CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS))
-            .thenAccept(System.out::println);
+    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> "hello", CompletableFuture.delayedExecutor(500, TimeUnit.MILLISECONDS));
 
-    future.get();
-    System.out.println("duration: " + TimeUnit.SECONDS.convert(System.nanoTime() - start, TimeUnit.NANOSECONDS));
+    future.join();
+    System.out.println("duration: " + TimeUnit.MILLISECONDS.convert(System.nanoTime() - start, TimeUnit.NANOSECONDS) + "ms");
 }
 ```
 
@@ -238,3 +268,4 @@ void testDelay() throws ExecutionException, InterruptedException {
 - https://11st-tech.github.io/2024/01/04/completablefuture/
 - https://www.baeldung.com/java-completablefuture
 - https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html
+- https://www.baeldung.com/java-completablefuture-join-vs-get
