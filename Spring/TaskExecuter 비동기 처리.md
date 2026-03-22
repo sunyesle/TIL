@@ -29,6 +29,96 @@ spring:
 | `spring.task.execution.shutdown.await-termination-period` |                   | 애플리케이션 종료시 수행중인 작업 완료 대기 시간   |
 | `spring.task.execution.thread-name-prefix`                | task-             | 스레드 이름 접두사                             |
 
+## Java Config 설정
+작업 성격에 따라 스레드 풀을 분리해야된다면 Java Config를 통해 여러개의 빈을 직접 등록해야 한다.
+```java
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+
+    @Bean(name = "apiExecutor")
+    public Executor apiExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(20);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("api-async-");
+
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(60);
+
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "mailExecutor")
+    public Executor mailExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        
+        executor.setCorePoolSize(5);
+        executor.setMaxPoolSize(10);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("mail-async-");
+
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
+        
+        executor.initialize();
+        return executor;
+    }
+}
+```
+
+### RejectedExecutionHandler
+`RejectedExecutionHandler`는 스레드 풀에서 더 이상 작업을 받을 수 없을 때 호출된다.
+
+`maxPoolSize`까지 스레드가 생성되어 작업을 처리하고 있고, 작업 큐도 `queueCapacity`만큼 가득 찬 상황에서 새로운 작업이 들어오면 `RejectedExecutionHandler`가 동작하게 된다.
+
+**거부 정책 종류**
+- **AbortPolicy** (기본값)
+  - `RejectedExecutionException` 예외가 발생한다.
+  - 작업 누락을 즉시 알아야 하는 경우
+- **CallerRunsPolicy**
+  - 요청한 스레드에서 직접 실행한다.
+  - 작업의 누락 없이 모두 처리해야하는 경우
+- **DiscardPolicy**
+  - 거부된 작업이 버려진다.
+  - 중요도가 낮고 작업이 누락되어도 괜찮은 경우
+- **DiscardOldestPolicy**
+  - 큐에서 가장 오래된 작업이 버려진다.
+  - 중요도가 낮고 작업이 누락되어도 괜찮은 경우. 최신 데이터가 더 중요한 경우
+
+
+### AsyncUncaughtExceptionHandler
+`AsyncUncaughtExceptionHandler`는 반환 값이 없는(`void`) 비동기 메서드에서 에러가 발생했을 경우 호출된다.
+기본적으로는 `SimpleAsyncUncaughtExceptionHandler`가 동작하여 에러 로그를 남긴다.
+
+다음과 같이 커스텀 핸들러를 지정할 수 있다.
+```java
+@Configuration
+@EnableAsync
+public class AsyncConfig implements AsyncConfigurer {
+
+    @Override
+    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+        return new CustomAsyncExceptionHandler();
+    }
+}
+```
+
+```java
+public class CustomAsyncExceptionHandler implements AsyncUncaughtExceptionHandler {
+
+    @Override
+    public void handleUncaughtException(Throwable ex, Method method, @Nullable Object... params) {
+        // 예외 처리
+    }
+}
+```
+
 ## 비동기 기능 활성화
 `@Configuration` 클래스에 `@EnableAsync` 어노테이션을 추가하여, `@Async` 어노테이션을 활성화한다.
 ```java
