@@ -44,6 +44,18 @@ public final int hashCode() {
 }
 ```
 
+만약 프록시 객체와 실제 객체가 섞여서 비교될 수 있는 상황이라면 추가로 `HibernateProxy` 여부를 체크해야 한다.
+```java
+// equals() 동일
+
+@Override
+public final int hashCode() {
+    return this instanceof HibernateProxy
+            ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode()
+            : getClass().hashCode();
+}
+```
+
 ---
 **Reference**
 - https://www.baeldung.com/jpa-entity-equality
