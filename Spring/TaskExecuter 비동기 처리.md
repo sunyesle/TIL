@@ -150,6 +150,83 @@ public Future<String> returnSomething(int i) {
 - `TaskExecutor`에 의해 스레드 풀에 작업으로 등록된다.
 - 작업은 별도의 스레드에서 처리되며, 호출자 메서드는 블로킹되지 않고 즉시 리턴된다.
 
+## 예시
+```java
+@Slf4j
+@Service
+public class AsyncService {
+
+    @Async
+    public void doSomething(int number) {
+        log.info("[doSomething] START");
+        try {
+            Thread.sleep(2000);
+            if (number == -1) {
+                throw new RuntimeException();
+            }
+            log.info("[doSomething] END");
+        } catch (InterruptedException e) {
+            log.error("[doSomething] ERROR", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Async
+    public CompletableFuture<String> returnSomething(int number) {
+        log.info("[returnSomething] START");
+        try {
+            Thread.sleep(2000);
+            if (number == -1) {
+                throw new RuntimeException();
+            }
+            log.info("[returnSomething] END");
+            return CompletableFuture.completedFuture("(" + number + ")");
+        } catch (InterruptedException e) {
+            log.error("[returnSomething] ERROR", e);
+            return CompletableFuture.failedFuture(e);
+        }
+    }
+}
+```
+
+```java
+@SpringBootTest
+public class AsyncTest {
+    private static final Log log = LogFactory.getLog(AsyncTest.class);
+
+    @Autowired
+    AsyncService asyncService;
+
+    @Test
+    void test() throws InterruptedException {
+        log.info("======= START =======");
+
+        asyncService.doSomething(1);
+
+        log.info("======= END =======");
+        Thread.sleep(3000);
+    }
+
+    @Test
+    void testFuture() throws InterruptedException {
+        log.info("======= START =======");
+
+        asyncService.returnSomething(1)
+                .thenAccept(result -> {
+                    // 성공 시
+                    log.info("Success: " + result);
+                })
+                .exceptionally(ex -> {
+                    // 예외 발생 시
+                    log.error("Error: " + ex.getMessage());
+                    return null;
+                });
+
+        log.info("======= END =======");
+        Thread.sleep(3000);
+    }
+}
+```
 ---
 **Reference**
 - https://docs.spring.io/spring-framework/reference/integration/scheduling.html
