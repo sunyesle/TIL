@@ -3,7 +3,7 @@
 
 Spring Boot 4에 `spring-boot-starter-opentelemetry` 스타터가 추가되었다.
 
-단일 스타터 추가만으로 **OTLP**(OpenTelemetry Protocol) 기반으로 로그, 메트릭, 트레이스를 내보내기 위한 위한 환경을 구축할 수 있다.
+단일 스타터 추가만으로 **OTLP**(OpenTelemetry Protocol) 기반으로 로그, 메트릭, 트레이스를 내보내기 위한 환경을 구축할 수 있다.
 
 **주요 자동화 기능**
 - **Traces**: OpenTelemetry SDK가 자동 구성되어 요청 흐름을 추적한다.
