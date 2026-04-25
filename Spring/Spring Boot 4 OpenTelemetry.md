@@ -176,7 +176,7 @@ public User findWithId(@ObservationKeyValue("user.id") long id) {
 Micrometer Tracing이 클래스패스에 있으면, Spring Boot는 로그 메시지에 trace ID와 span ID를 포함하도록 로그 패턴을 조정한다. 이는 특정 트레이스와 관련된 로그를 찾을 때 유용하다.
 
 서버가 응답을 보낼 때 HTTP 헤더에 Trace ID를 포함시키면 장애 원인 파악과 대응 시간을 단축시킬 수 있다.
-사용자가 에러를 겪었을 때 Trace ID를 알려주는 것만으로도, 해당 요청에 대한 모든 기록을 추적하여 원인을 파악할 수 있다.
+사용자가 에러를 겪었을 때 Trace ID를 알려주는 것만으로도, 해당 요청에 대한 모든 기록을 추적하여 원인을 파악할 수 있기 때문이다.
 
 다음 서블릿 필터를 사용하여 Trace ID를 응답 헤더에 추가할 수 있다.
 ```java
@@ -204,13 +204,14 @@ class TraceIdFilter extends OncePerRequestFilter {
 }
 ```
 
-## 비동기 작업 시 컨텍스트가 유실되는 문제 해결
+## 주의 사항
+### 비동기 작업 시: 스레드 간 컨텍스트 전파 설정
 `@Async`나 `AsyncTaskExecutor`를 사용하여 새로운 스레드에서 작업을 수행하면, 기존 스레드가 가지고 있던 Trace ID나 Span ID 같은 컨텍스트 정보가 유실된다.
 
-트레이스 정보는 `ThreadLocal`에 보관되는데 이 `ThreadLocal`이 새 스레드로 전달되지 않기 때문에 발생하는 문제다.
+이는 트레이스 정보가 `ThreadLocal`에 보관되기 때문인데, 스레드가 전환되는 과정에서 `ThreadLocal`이 새 스레드로 전달되지 않아 발생하는 문제이다.
 
 `ContextPropagatingTaskDecorator` 빈을 등록하는 것만으로 해결할 수 있다.
-이는 Micrometer의 Context Propagation API를 사용하여, 현재 스레드의 컨텍스트를 비동기 스레드로 복제해 주는 역할을 한다.
+이 데코레이터는 Micrometer의 Context Propagation API를 사용하여, 현재 스레드의 컨텍스트를 비동기 스레드로 복제해 주는 역할을 한다.
 ```java
 @Configuration(proxyBeanMethods = false)
 public class ContextPropagationConfiguration {
@@ -222,7 +223,7 @@ public class ContextPropagationConfiguration {
 }
 ```
 
-## HTTP 클라이언트 사용 시 주의사항
+### HTTP 클라이언트 사용 시: 빌더 활용
 `RestTemplate`, `RestClient`, `WebClient`를 직접 `new` 키워드로 생성하면 안된다.
 
 대신 `RestTemplateBuilder`, `RestClient.Builder`, `WebClient.Builder` 주입받고 이를 사용해 클라이언트를 생성해야 한다.
