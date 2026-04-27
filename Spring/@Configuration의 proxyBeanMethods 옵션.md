@@ -1,4 +1,4 @@
-# @Configuration과 proxyBeanMethods
+# @Configuration의 proxyBeanMethods 옵션
 
 `@Configuration`은 `@Component`를 메타 어노테이션(Meta-annotation)으로 하는 합성 어노테이션(Composed-annotation)이다.
 `@Component`와의 차이점은 `proxyBeanMethods` 옵션을 제공한다는 점이다.
