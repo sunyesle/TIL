@@ -1,6 +1,6 @@
 # Spring Boot Data Redis
-
 > Spring Boot 4.0.3 기준으로 작성되었다.
+
 ## 의존성
 > build.gradle
 ```gradle
@@ -31,7 +31,16 @@ spring:
 | `spring.redis.lettuce.pool.min-idle`   | 유휴 상태에서 유지할 수 있는 최소 연결 수  |
 | `spring.redis.lettuce.pool.max-wait`   | 연결을 얻기 위해 기다리는 최대 시간     |
 
-## Java 설정
+## RedisTemplate
+Spring Data Redis의 핵심 클래스로, Redis와 상호작용을 위한 메서드를 제공한다.
+
+- **추상화**: Redis에 대한 저수준 상세 사항들을 추상화한다.
+- **리소스 관리**: Redis 연결과 같은 리소스를 관리해준다.
+- **직렬화/역직렬화**: Redis에 데이터를 저장하거나 가져올 때 직렬화와 역직렬화를 처리해준다.
+- **예외 처리**: Redis 클라이언트(Lettuce, Jedis)에서 발생하는 예외를 스프링의 예외 계층으로 변환해준다.
+
+### 빈 등록
+`RedisTemplate`을 빈으로 등록한다. 이때 키와 값의 직렬화 방식을 지정한다.
 ```java
 @Configuration
 public class RedisConfig {
@@ -48,14 +57,6 @@ public class RedisConfig {
     }
 }
 ```
-
-## RedisTemplate
-Spring Data Redis의 핵심 클래스로, Redis와 상호작용을 위한 메서드를 제공한다.
-
-- **추상화**: Redis에 대한 저수준 상세 사항들을 추상화한다.
-- **리소스 관리**: Redis 연결과 같은 리소스를 관리해준다.
-- **직렬화/역직렬화**: Redis에 데이터를 저장하거나 가져올 때 직렬화와 역직렬화를 처리해준다.
-- **예외 처리**: Redis 클라이언트(Lettuce, Jedis)에서 발생하는 예외를 스프링의 예외 계층으로 변환해준다.
 
 ### 주요 기능
 `RedisTemplate`의 `opsFor...()` 메서드는 자료구조별 연산을 모아둔 `...Operations` 인터페이스를 반환한다.
