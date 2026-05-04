@@ -1,21 +1,20 @@
 # Spring Boot Kafka 연동하기
 
 ## 의존성
-spring kafka는 스프링 프레임워크에서 Kakfa를 쉽게 사용할 수 있도록 도와주는 라이브러리이다.
+> build.gradle
 ```gradle
-implementation 'org.springframework.kafka:spring-kafka'
+dependencies {
+    implementation 'org.springframework.kafka:spring-kafka'
+}
 ```
 
 ## Topic
-### KafkaAdmin
-`KafkaAdmin`은 브로커에 토픽을 생성하는 역할을 한다.
+`KafkaAdmin`은 브로커에 토픽을 생성하는 역할을 한다. Spring Boot를 사용하는 경우 `KafkaAdmin` 빈이 자동으로 등록된다.
 
-Spring Boot를 사용하는 경우 `KafkaAdmin` 빈이 자동으로 등록되며, 이를 통해 브로커에 토픽을 생성할 수 있다.
-
-### NewTopic
 토픽을 생성하려면 `NewTopic` 빈을 정의해야 한다.
-
 애플리케이션 시작 시, `KafkaAdmin`은 등록되어 있는 `NewTopic` 빈을 참고하여, 해당 토픽이 존재하지 않으면 자동으로 생성한다.
+
+### 설정
 ```java
 @Configuration
 public class KafkaTopicConfig {
@@ -31,14 +30,13 @@ public class KafkaTopicConfig {
 ```
 
 ## Producer
-메시지를 전송하려면 먼저 `ProducerFactory`를 설정해야 한다.
-이를 통해 프로듀서 인스턴스의 생성 전략이 정의된다.
+메시지를 전송하려면 `ProducerFactory`와 `KafkaTemplate`을 설정해야 한다.
 
-그다음으로 프로듀서 인스턴스를 래핑하는 `KafkaTemplate`을 설정해야 한다.
-`KafkaTemplate`은 토픽에 메시지를 전송하기 위한 편리한 메서드를 제공한다.
+`ProducerFactory`는 프로듀서 인스턴스의 생성 전략을 정의하며, `KafkaTemplate`은 프로듀서 인스턴스를 래핑하여 토픽에 메시지를 전송하는 편리한 메서드를 제공한다.
 
-설정은 application.yml 또는 Java Config 통해 할 수 있다.
-### application.yml
+### 설정
+application.yml 또는 Java Config
+#### 1. application.yml
 ```yml
 spring:
   kafka:
@@ -48,7 +46,7 @@ spring:
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
 ```
 
-### Java Config
+#### 2. Java Config
 ```java
 @Configuration
 public class KafkaProducerConfig {
@@ -68,8 +66,8 @@ public class KafkaProducerConfig {
 }
 ```
 
-### KafkaTemplate
-`KafkaTemplate` 클래스를 사용하여 메시지를 전송할 수 있다.
+### 예시
+`KafkaTemplate`를 사용하여 메시지를 전송할 수 있다.
 ```java
 @Component
 @RequiredArgsConstructor
@@ -85,12 +83,13 @@ public class KafkaMessageProducer {
 ```
 
 ## Consumer
-메시지를 수신하려면 `ConsumerFactory` 와 `KafkaListenerContainerFactory`를 설정해야 한다.
+메시지를 수신하려면 `ConsumerFactory`와 `KafkaListenerContainerFactory`를 설정해야 한다.
 
 `ConcurrentKafkaListenerContainerFactory`는 `KafkaListenerContainerFactory`의 구현체로 `@KafkaListener` 어노테이션이 달린 메서드에 대한 컨테이너를 만드는 데 사용된다.
 
-설정은 application.yml 또는 Java Config 통해 할 수 있다.
-### application.yml
+### 설정
+application.yml 또는 Java Config
+#### 1. application.yml
 ```yml
 spring:
   kafka:
@@ -101,7 +100,7 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 ```
 
-### Java Config
+#### 2. Java Config
 ```java
 @Configuration
 public class KafkaConsumerConfig {
@@ -125,7 +124,7 @@ public class KafkaConsumerConfig {
 }
 ```
 
-### @KafkaListener
+### 예시
 `@KafkaListener` 애노테이션을 사용하여 메서드를 메시지 리스너로 지정할 수 있다.
 ```java
 @Slf4j
@@ -141,26 +140,8 @@ public class KafkaMessageConsumer {
 }
 ```
 
-## 카프카 설정 주의 사항
-### 컨슈머 자동 커밋
-```yml
-spring:
-  kafka:
-    consumer:
-      enable-auto-commit: true # 컨슈머 자동 커밋 활성화
-      auto-commit-interval: 5000ms # 5초 간격으로 커밋을 진행
-      max-poll-records: 100 # poll() 호출당 반환할 최대 레코드 수
-```
-해당 설정에서는 다음과 같은 상황에서 메시지 유실 또는 중복이 발생할 수 있다.
-
-**1. 메시지 유실**<br>
-메시지의 처리 시간이 5초보다 긴 경우, 메시지 처리가 완료되기 전에 오프셋 커밋이 일어난다. 이후 메시지 처리에서 오류가 발생하는 경우 해당 메시지는 다시 처리할 수 없게된다.
-
-**2. 메시지 중복**<br>
-poll() 메서드를 호출하여 100개의 레코드를 가져온다. 이 중 30개의 레코드를 처리한 상태에서 커밋이 이루어지기 전에 리밸런싱이 발생하여 컨슈머들이 재할당되는 경우, 마지막 커밋으로 부터 다시 데이터를 polling하여 이미 처리한 30개의 레코드를 다시 중복으로 처리하게 된다.
-
 ## spring kafka properties 
-지원되는 옵션은 [KafkaProperties.java](https://github.com/spring-projects/spring-boot/blob/3.5.x/spring-boot-project/spring-boot-autoconfigure/src/main/java/org/springframework/boot/autoconfigure/kafka/KafkaProperties.java) 파일을 참조
+지원되는 옵션은 [KafkaProperties.java](https://github.com/spring-projects/spring-boot/blob/4.0.x/module/spring-boot-kafka/src/main/java/org/springframework/boot/kafka/autoconfigure/KafkaProperties.java) 참조
 ```yml
 spring:
   kafka:
@@ -232,7 +213,7 @@ spring:
       application-id: # 스트림의 application.id (기본값은 spring.application.name)
       auto-startup: true # 스트림 팩토리 빈 자동 시작 여부
       bootstrap-servers: # 스트림에 사용할 host:port 목록
-      cache-max-size-buffering: # 전체 스레드에서 버퍼링에 사용할 최대 메모리 크기
+      state-store-cache-max-size: # 전체 스레드에서 버퍼링에 사용할 최대 메모리 크기
       client-id: # 스트림 클라이언트 ID
       replication-factor: # 토픽의 복제 계수
       properties: {} # 스트림 구성용 추가 속성
@@ -246,7 +227,3 @@ spring:
 - https://adjh54.tistory.com/641
 - https://devel-repository.tistory.com/46
 - https://www.baeldung.com/spring-kafka
-
-컨슈머 자동 커밋 주의사항
-- https://pula39.tistory.com/19
-- https://dkswnkk.tistory.com/744
