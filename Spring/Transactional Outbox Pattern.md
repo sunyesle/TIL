@@ -25,14 +25,12 @@ public Order createOrder(OrderRequest orderRequest) {
 ## Transactional Outbox Pattern
 DB 트랜잭션은 DB 차원에서 원자성을 보장하므로 트랜잭션에 포함된 쿼리들은 원자적으로 실행되지만, Message Broker는 다른 Data Source이므로 원자적인 처리가 불가능하다.
 
-이러한 문제를 해결하기 위해 사용하는 방법 중 하나가 **Transactional Outbox Pattern** 이다.
+이러한 문제를 해결하기 위해 사용하는 방법 중 하나가 **Transactional Outbox Pattern** 이다. **핵심 아이디어는 메시지 발행 정보를 비즈니스 데이터와 동일한 DB에 저장하여 원자성을 확보하는 것이다.**
 
-핵심 아이디어는 메시지 발행 정보를 비즈니스 데이터와 동일한 DB에 저장하여 원자성을 확보하는 것이다.
-
-DB에 발행할 메시지 정보를 저장할 `OUTBOX` 테이블을 생성하고, 메시지를 발행하는 대신 이 테이블에 데이터를 저장한다.
-이후 스케줄러 등 별도의 프로세스로 `OUTBOX` 테이블에 저장된 정보를 읽어 메시지를 발행한다.
+DB에 발행할 메시지 정보를 저장할 `OUTBOX` 테이블을 생성하고, 메시지를 발행하는 대신 이 테이블에 데이터를 저장한다. 이후 스케줄러 등 별도의 프로세스로 `OUTBOX` 테이블에 저장된 정보를 읽어 메시지를 발행한다.
 
 ## 구현 예시
+### Outbox 테이블 저장과 스케줄러 구현
 메시지 정보를 저장할 `Outbox` 엔티티를 정의한다.
 ```java
 @Entity
@@ -58,7 +56,10 @@ public class Outbox {
 서비스에서 직접 메시지를 발행하는 대신 `Outbox` 테이블에 발행할 메시지 정보를 저장한다.
 ```java
 @Service
+@RequiredArgsConstructor
 public class OrderService {
+
+    private final OutboxRepository outboxRepository;
 
     @Transactional 
     public Order createOrder(OrderRequest orderRequest) { 
@@ -78,7 +79,10 @@ public class OrderService {
 스케줄러를 통해 주기적으로 `Outbox` 테이블의 데이터를 읽어 메시지를 발행한다. 
 ```java
 @Component
+@RequiredArgsConstructor
 public class OutboxScheduler {
+
+    private final OutboxProcessor outboxProcessor;
 
     @Scheduled(fixedDelay = 10000)
     public void processOutbox() {
@@ -90,7 +94,11 @@ public class OutboxScheduler {
 `OutboxProcessor`에서 메시지를 발행하고, 처리 완료된 건을 구분하기 위해 `Outbox`의 상태 값을 업데이트한다.
 ```java
 @Component
+@RequiredArgsConstructor
 public class OutboxProcessor {
+
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final OutboxService outboxService;
 
     public void processAll() {
         outboxService.getUnprocessedOutboxes().forEach(this::processInternal);
@@ -114,7 +122,10 @@ public class OutboxProcessor {
 특정 메시지 처리중에 예외가 발생하더라도, 처리 완료된 다른 메시지의 상태까지 롤백되는 것을 방지하기 위해 `REQUIRES_NEW` 전파 속성을 사용하여 트랜잭션을 분리했다.
 ```java
 @Service
+@RequiredArgsConstructor
 public class OutboxService {
+
+    private final OutboxRepository outboxRepository;
 
     // 메시지마다 별도의 트랜잭션으로 진행 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -126,7 +137,7 @@ public class OutboxService {
 }
 ```
 
-## Application Event를 이용한 Outbox 저장/발행 로직 분리
+### Application Event를 이용한 Outbox 저장/발행 로직 분리
 Application Event를 활용하여, 비즈니스 로직과 `Outbox` 저장 로직을 분리하고 이벤트가 즉시 발행될 수 있도록 개선했다.
 
 이벤트 객체를 정의한다.
@@ -153,6 +164,7 @@ public class OutboxEvent {
 서비스에서 직접 `Outbox` 테이블에 데이터 저장하는 대신, 애플리케이션 이벤트를 발행한다.
 ```java
 @Service
+@RequiredArgsConstructor
 public class OrderService {
 
     private final ApplicationEventPublisher publisher;
@@ -161,7 +173,7 @@ public class OrderService {
     public Order createOrder(OrderRequest orderRequest) { 
         Order order = createOrder(orderRequest); // 비즈니스 로직
 
-        order = orderRepository.save(order); // 데이터베이스에 주문 정보 저장
+        order = orderRepository.save(order); // DB에 주문 정보 저장
 
         // ApplicationEvent 발행
         OrderCreatedEvent data = new OrderCreatedEvent(order);
@@ -179,10 +191,13 @@ public class OrderService {
 @Component
 public class OutboxEventListener {
 
+    private final OutboxRepository outboxRepository;
+    private final OutboxProcessor outboxProcessor;
+
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void saveOutbox(OutboxEvent event) {
-        Outbox outbox = outboxRepository.save(new Outbox(event.eventType(), objectMapper.writeValueAsString(event.payload())));
-        
+        Outbox outbox = outboxRepository.save(new Outbox(event.eventType(), objectMapper.writeValueAsString(event.getData())));
+
         // 생성된 ID를 이벤트 객체에 보관 (AFTER_COMMIT에서 쓰기 위함)
         event.setOutboxId(outbox.getId());
     }
@@ -192,6 +207,32 @@ public class OutboxEventListener {
     public void processOutbox(OutboxEvent event) {
         // 메시지 발행
         outboxProcessor.process(outbox.getId());
+    }
+}
+```
+
+비동기(`@Async`) 기능을 활성화 하고, 이벤트 리스너에서 사용할 `TaskExecutor` 빈을 등록한다.
+```java
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+
+    public static final String EVENT_ASYNC_TASK_EXECUTOR = "eventAsyncTaskExecutor";
+
+    @Bean(name = EVENT_ASYNC_TASK_EXECUTOR)
+    public Executor outboxExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(20);
+        executor.setQueueCapacity(100);
+        executor.setThreadNamePrefix("event-async-");
+
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
+
+        executor.initialize();
+        return executor;
     }
 }
 ```
