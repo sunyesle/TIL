@@ -13,10 +13,10 @@ Replication은 각 **Topic의 Partition들을 Kafka Cluster 내의 다른 Broker
 
 replication factor 값을 높이게 되면 가용성이 증가하지만, 그에 비례하여 디스크 사용량이 배가 되며 Broker의 리소스 사용량 또한 증가한다. 따라서 Topic에 저장되는 Data의 중요도에 따라 적절히 값을 조정해야 한다.
 
-<img width="600" height="437" alt="Image" src="https://github.com/user-attachments/assets/f0885def-0f54-4a7a-b302-fbb8be8f9d89" /><br>
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/f0885def-0f54-4a7a-b302-fbb8be8f9d89" /><br>
 Partition이 4, Replication factor가 1으로 설정된 Topic
 
-<img width="600" height="481" alt="Image" src="https://github.com/user-attachments/assets/6f5ee639-b0b7-4393-b983-d8a04d9bd395" /><br>
+<img width="600" alt="Image" src="https://github.com/user-attachments/assets/6f5ee639-b0b7-4393-b983-d8a04d9bd395" /><br>
 Partition 4, Replication factor가 3으로 설정된 Topic
 
 ## Leader & Follower
