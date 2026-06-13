@@ -1,9 +1,9 @@
 # GitHub Actions 로컬 환경에서 실행하기 with Act
 ## Act
-`act`는 Docker 컨테이너를 사용하여 로컬에서 GitHub Actions 워크플로우를 실행하도록 설계된 CLI 도구이다.
+act는 Docker 컨테이너를 사용하여 로컬에서 GitHub Actions 워크플로우를 실행하도록 설계된 CLI 도구이다.
 
 커밋/푸시할 필요 없이 로컬에서 빠르게 워크플로우를 테스트할 수 있다.
-하지만 `act`가 실제 GitHub Actions 환경과 완전히 동일하지는 않기 때문에, GitHub에서 최종적으로 검증을 수행해야 한다.
+하지만 act가 실제 GitHub Actions 환경과 완전히 동일하지는 않기 때문에, GitHub에서 최종적으로 검증을 수행해야 한다.
 
 ## 설치
 [공식 문서 설치 가이드](https://nektosact.com/installation/index.html)
@@ -15,7 +15,7 @@
 - Medium size image: ~500MB, includes only necessary tools to bootstrap actions and aims to be compatible with most actions
 - Micro size image: <200MB, contains only NodeJS required to bootstrap actions, doesn't work with all actions
 ```
-`act`를 처음 실행하면 기본 runner 이미지 크기를 선택하라는 메시지가 표시된다.
+act를 처음 실행하면 기본 runner 이미지 크기를 선택하라는 메시지가 표시된다.
 
 각 이미지에 대한 자세한 내용은 [공식 문서](https://nektosact.com/usage/runners.html)에서 확인할 수 있다.
 
