@@ -24,7 +24,7 @@ if (obj instanceof String s && s.length() > 2) {
 
 ## JDK 21
 ### Record Patterns
-타입 비교 후 Record 의 내부 필드 값을 추출하여 할당한다.
+타입 비교 후 `record`의 내부 필드 값을 추출하여 할당한다.
 ```java
 public record Point(int x, int y) {}
 
@@ -32,7 +32,7 @@ if (obj instanceof Point(int x, int y)) {
     System.out.println(x + y);
 }
 ```
-중첩된 Record에도 적용할 수 있다.
+중첩된 `record`에도 적용할 수 있다.
 ```java
 public record GPS(double latitude, double longitude) {}
 public record Location(String name, GPS gps) {}
