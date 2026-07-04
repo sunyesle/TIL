@@ -1,4 +1,7 @@
 # HTTP/1.0, HTTP/1.1, HTTP/2, HTTP/3
+
+<img width="850" height="698" alt="Comparison-of-HTTP-versions" src="https://github.com/user-attachments/assets/8257f08f-7e20-420f-9a19-94d5aa7213aa" />
+
 ## HTTP/1.0
 하나의 연결이 하나의 요청을 처리하도록 설계되었다. 요청마다 TCP 연결을 새로 맺고 끊어야 했기 때문에 통신 속도가 느리다는 문제가 있었다.
 
