@@ -32,3 +32,8 @@ services:
 volumes:
   open-webui-data:
 ```
+
+---
+**Reference**
+- https://docs.openwebui.com/features/chat-conversations/rag/document-extraction/apachetika/
+
