@@ -1,4 +1,4 @@
-# 프로세스 시스템 콜
+# 프로세스 생성과 통신 예제(fork, exec, wait, pipe)
 ## fork()
 ```c
 #include <unistd.h>
