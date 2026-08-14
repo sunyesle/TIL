@@ -6,7 +6,7 @@
 MMU는 CPU와 메모리 사이에 위치하여 가상 메모리 주소와 물리 메모리 주소 간의 변환을 담당하는 컴퓨터 하드웨어 부품이다.
 
 ## MMU 동작 과정
-![MMU](https://github.com/user-attachments/assets/eb71c392-fa18-4235-9eef-9ca0d03380f0)
+<img width="797" height="483" alt="8_10_PagingHardware" src="https://github.com/user-attachments/assets/d851510f-4250-4c16-9b99-37948871cf43" />
 
 (**p**: 페이지 번호, **f**: 프레임 번호, **d**: offset)
 
@@ -29,7 +29,7 @@ key-value 쌍으로 데이터를 관리하는 연관 메모리(associative memor
 
 CPU는 페이지 테이블보다 TLB를 우선적으로 참조하여, 만약 원하는 페이지가 TLB에 있는 경우 곧바로 frame number를 얻을 수 있고, 그렇지 않은 경우 메인 메모리에 있는 페이지 테이블로부터 frame number를 얻을 수 있다.
 
-![TLB](https://github.com/user-attachments/assets/cffa34ad-d3c4-4eab-8aba-380352d36ff4)
+<img width="704" height="540" alt="8_14_PagingHardware" src="https://github.com/user-attachments/assets/cffa34ad-d3c4-4eab-8aba-380352d36ff4" />
 
 ---
 **Reference**<br>
