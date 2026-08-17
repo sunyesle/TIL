@@ -9,17 +9,18 @@ MMU는 CPU가 생성한 논리 주소를 물리 주소로 변환하는 하드웨
 
 MMU는 메모리 관리 방식에 따라 다양한 형태를 갖는다.
 
-## 재배치 레지스터(Relocation Register)
+## 재배치/한계 레지스터(Relocation/Limit Registers)
 
 <img width="621" height="322" alt="8_06_HardwareSupport" src="https://github.com/user-attachments/assets/105aa5ae-0984-4ffe-880b-e93f4d88a270" />
 
-- **limit**: 프로세스의 크기
+- **limit**: 프로세스가 사용할 수 있는 논리 주소 공간의 크기
 - **relocation**: 프로세스의 시작 물리 주소
 
 > **물리 주소 = 재배치 레지스터 + 논리 주소**
 
 ### 주소 변환 과정
-1. 논리 주소에 재배치 레지스터의 값을 더해서 최종 물리 주소를 구한다.
+1. 논리 주소가 limit을 초과하지 않는지 확인한다.
+2. 논리 주소에 재배치 레지스터의 값을 더해서 최종 물리 주소를 구한다.
 
 ## 세그먼트 테이블(Segment Table)
 
