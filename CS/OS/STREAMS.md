@@ -24,6 +24,8 @@ UNIX 운영체제의 **STREAMS**는 사용자 프로세스와 장치 드라이�
 
 TCP/IP 프로토콜 스택 구현, 터미널 I/O 처리 등 복잡하고 계층적인 I/O 처리에 사용된다.
 
+<img width="1024" height="881" alt="a42cbea2-6219-447e-a123-ee14e8a2c850" src="https://github.com/user-attachments/assets/d42df04c-e273-4a08-9ada-cfb00cfe9d2b" />
+
 ---
 **Reference**
 - https://wikidocs.net/312511
