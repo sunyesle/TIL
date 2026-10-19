@@ -70,13 +70,13 @@ async def update_item(
 ## 쿼리 파라미터
 
 ```python
-# 필수 매개변수, None 허용하지 않음
+# 필수 파라미터, None 허용하지 않음
 q: str
 
 # 생략 가능, 기본값은 0
 q: str = 0
 
-# 필수 매개변수, None 허용
+# 필수 파라미터, None 허용
 q: str | None
 
 # 생략 가능, 기본값은 None
@@ -108,7 +108,7 @@ q: Annotated[
 q: Annotated[str | None, Query(alias="item-query")] = None
 ```
 
-### Pydantic 모델을 이용한 쿼리 매개변수 그룹화
+### Pydantic 모델을 이용한 쿼리 파라미터 그룹화
 
 ```python
 class FilterParams(BaseModel):
