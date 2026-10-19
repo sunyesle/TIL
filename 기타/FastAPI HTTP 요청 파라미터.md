@@ -67,6 +67,59 @@ async def update_item(
 
 > **Header 자동 변환**: 대부분의 표준 헤더는 `-`문자로 구분된다. 파라미터명의 `_`를 `-`으로 자동 변환하여 매핑한다.
 
+## 쿼리 파라미터
+
+```python
+# 필수 매개변수, None 허용하지 않음
+q: str
+
+# 생략 가능, 기본값은 0
+q: str = 0
+
+# 필수 매개변수, None 허용
+q: str | None
+
+# 생략 가능, 기본값은 None
+q: str | None = None
+```
+
+### 검증 및 메타데이터
+
+```python
+q: Annotated[str | None, Query(min_length=3)] = None
+
+q: Annotated[
+    str | None,
+    Query(
+        min_length=3, # 검증
+        max_length=50,
+        pattern="^[a-zA-Z0-9]+$",
+        title="Query string", # 문서화 메타데이터
+        description="검색어",
+        deprecated=True,
+    ),
+] = None
+```
+
+### 별칭(Alias)
+별칭을 통해 파이썬 변수명에 사용할 수 없는 하이픈(`-`) 등을 쿼리 파라미터명에 사용할 수 있다.
+
+```python
+q: Annotated[str | None, Query(alias="item-query")] = None
+```
+
+### Pydantic 모델을 이용한 쿼리 매개변수 그룹화
+
+```python
+class FilterParams(BaseModel):
+    limit: int = Field(100, gt=0, le=100)
+    offset: int = Field(0, ge=0)
+    order_by: Literal["created_at", "updated_at"] = "created_at"
+    tags: list[str] = []
+
+filter_query: Annotated[FilterParams, Query()]
+```
+
 ## Form, File
 업로드된 파일 또는 폼 데이터를 받으려면 `python-multipart`를 설치해야 한다.
 ```bash
