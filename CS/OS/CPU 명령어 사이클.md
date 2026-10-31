@@ -19,6 +19,8 @@ CPU의 명령어 사이클은 일반적으로 다음과 같은 단계로 구성�
 - **Execute**: 명령어 실행
 - **Interrupt**: 인터럽트 처리
 
+<img width="775" height="505" alt="CPU 명령어 사이클" src="https://github.com/user-attachments/assets/1e469a88-38a7-47c9-974c-33eb9d097a69" />
+
 ## 1. Fetch (명령어 인출)
 메모리에서 다음에 실행할 명령어를 가져오는 단계이다.
 
